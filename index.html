@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
-<title>HIRKA 1.10 | هیرکا</title>
+<title>HIRKA 1.11 | هیرکا</title>
 <link href="manifest.json" rel="manifest"/>
 <meta content="#2B241F" name="theme-color"/>
 <link href="icon-192.png" rel="icon" type="image/png"/>
@@ -2164,41 +2164,9 @@ function render(){const root=document.getElementById('h48contract');if(!root||!S
  const legal=node('details','h48box');txt('summary','یادداشت‌های مدیریتی و موارد ضروری برای بررسی حقوقی (جزء متن امضایی نیست)','',legal);txt('div',"پیوست مدیریتی ـ موارد ضروری پیش از تصویب قالب\n• الف. احراز هویت دقیق طرف مجری تا زمان ثبت شخصیت حقوقی هیرکا و حدود اختیار امضاکنندگان؛ تعیین تکلیف امضای دو شریک در تصویب داخلی نقشه و الحاقیه.\n• ب. بررسی وکیل درباره انصراف‌های ۵/۲۰/۷۰/۹۰ درصد، وجه التزام ۰٫۱٪ تا سقف ۵٪، خاتمه ناشی از تأخیر و تسویه مالکیت کالای نیمه‌ساخته.\n• پ. تکمیل سازوکار حل اختلاف و داوری یا انتخاب مرجع قضایی؛ تعریف روز کاری، مهلت‌های خالی و نحوه ابلاغ قابل اثبات.\n• ت. بررسی مالیات، صورتحساب، بیمه مسئولیت، حقوق مصرف‌کننده، اعتبار امضای الکترونیکی و قراردادهای منعقده از راه دور متناسب با وضعیت ثبتی و نوع مشتری.\n• ث. تعیین معیارهای فنی و تلورانس‌ها برای هر محصول، شرایط خاص رطوبت و نگهداری، حدود مالکیت فکری نقشه‌ها و نحوه تحویل فایل طراحی.\n• ج. تصویب متن نهایی توسط هر دو شریک؛ این پیش‌نویس به‌تنهایی تصویب رسمی هیرکا محسوب نمی‌شود.",'h48preview',legal);
  txt('p','این متن، پیش‌نویس قراردادی است و پیش از امضا باید از نظر حقوقی و مفاد اختصاصی پروژه بررسی شود.','h48muted',preview);
  }
- function printText(t){const frame=document.createElement('iframe');frame.style.cssText='position:fixed;left:-10000px;top:0;width:800px;height:1000px;border:0';document.body.append(frame);const doc=frame.contentDocument;doc.open();doc.write('<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>قرارداد هیرکا چوب</title><style>@page{size:A4;margin:20mm}body{font:15px/2.2 Tahoma,sans-serif;color:#222;white-space:pre-wrap;direction:rtl}</style></head><body><style id="h92-library-images">#ks #ksgrid .h92-picture{display:block!important;width:100%!important;height:124px!important;overflow:hidden!important;border-radius:12px!important;background:#f3f2ec!important}#ks #ksgrid .h92cabinet{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important}#ks #ksgrid .h91-card{justify-content:flex-start!important;min-height:182px!important;padding:9px!important}#ks #ksgrid .h91-card strong{line-height:1.5!important}#ks #ksgrid .h91-card small{line-height:1.5!important}</style><script id="hirka-107-catalog-first-render">
-(()=>{
-  'use strict';
-  function refreshCatalog(){
-    const studio=document.getElementById('ks');
-    const grid=document.getElementById('ksgrid');
-    const picker=document.getElementById('kscat');
-    if(!studio||!grid||!picker||studio.style.display==='none'||!window.KS||typeof KS.catalog!=='function')return;
-    try{
-      if(!picker.value && picker.options.length)picker.selectedIndex=0;
-      KS.catalog();
-    }catch(err){console.error('HIRKA catalog initial render:',err);}
-  }
-  function install(){
-    if(!window.KS||typeof KS.open!=='function'||KS.open.__hirka107)return;
-    const original=KS.open;
-    function openWithCatalog(...args){
-      const result=original.apply(this,args);
-      refreshCatalog();
-      requestAnimationFrame(refreshCatalog);
-      return result;
-    }
-    openWithCatalog.__hirka107=true;
-    KS.open=openWithCatalog;
-    const studio=document.getElementById('ks');
-    if(studio&&studio.style.display!=='none')refreshCatalog();
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
-  else install();
-  window.addEventListener('hirka-tech-library-change',()=>requestAnimationFrame(refreshCatalog));
-})();
-</script>
-</html>');doc.close();doc.body.textContent=t;frame.onload=()=&gt;{};setTimeout(()=&gt;{try{frame.contentWindow.focus();frame.contentWindow.print()}catch(e){alert('چاپ در این مرورگر امکان‌پذیر نیست')}setTimeout(()=&gt;frame.remove(),3000)},250)}
- const oldTab=window.tab;window.tab=function(n){const result=oldTab.apply(this,arguments);if(n===9){render();requestAnimationFrame(()=&gt;{const root=document.getElementById('contract15');if(!root)return;const panels=[...root.querySelectorAll(':scope &gt; .h23panel')];for(const panel of panels){const summary=panel.querySelector(':scope &gt; summary');if(summary&amp;&amp;summary.textContent.trim()==='مشخصات قرارداد'){summary.textContent='ثبت اطلاعات اجرایی قرارداد';panel.open=false;root.append(panel);break}}})}return result};
-})();<style id="h53dashboardux">
+ function printText(t){const frame=document.createElement('iframe');frame.style.cssText='position:fixed;left:-10000px;top:0;width:800px;height:1000px;border:0';document.body.append(frame);const doc=frame.contentDocument;doc.open();doc.write('<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>قرارداد هیرکا چوب</title><style>@page{size:A4;margin:20mm}body{font:15px/2.2 Tahoma,sans-serif;color:#222;white-space:pre-wrap;direction:rtl}</style></head><body></html>');doc.close();doc.body.textContent=t;frame.onload=()=>{};setTimeout(()=>{try{frame.contentWindow.focus();frame.contentWindow.print()}catch(e){alert('چاپ در این مرورگر امکان‌پذیر نیست')}setTimeout(()=>frame.remove(),3000)},250)}
+ const oldTab=window.tab;window.tab=function(n){const result=oldTab.apply(this,arguments);if(n===9){render();requestAnimationFrame(()=>{const root=document.getElementById('contract15');if(!root)return;const panels=[...root.querySelectorAll(':scope > .h23panel')];for(const panel of panels){const summary=panel.querySelector(':scope > summary');if(summary&&summary.textContent.trim()==='مشخصات قرارداد'){summary.textContent='ثبت اطلاعات اجرایی قرارداد';panel.open=false;root.append(panel);break}}})}return result};
+})();</script><style id="h53dashboardux">
 #tab14 .h52summary{display:block;margin:2px 0 18px;padding:11px;border:1px solid #dbe4d9;border-radius:20px;background:linear-gradient(135deg,#f8faf5,#f1f5ee);box-shadow:0 5px 20px #2942310e}
 #tab14 .h53top{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:#385444;margin:1px 3px 10px}
 #tab14 .h53spark{color:#b59a60;font-size:16px}

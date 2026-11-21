@@ -1,0 +1,1 @@
+r7: Remove duplicate cutting-sheet header and footer, reserve a safe top content zone for all workshop pages. No changes to cut geometry, data or application UI. TEST ONLY.

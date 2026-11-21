@@ -1,0 +1,6 @@
+HIRKA 1.13-r8 (TEST ONLY)
+- Workshop cutting-list: wider piece description, narrower edge columns; names up to 27 characters.
+- Workshop PDF font preference: B Nazanin / B Mitra with Persian fallback; availability depends on browser device.
+- Workshop cost table monetary headers explicitly show toman; existing fa-IR grouped numeric formatting retained.
+- No cutting calculations, packing, or application UI changes.
+- Real browser PDF regression test still required.

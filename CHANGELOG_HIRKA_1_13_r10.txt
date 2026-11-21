@@ -1,0 +1,1 @@
+HIRKA 1.13-r10 — unified Persian grouping for monetary text inputs across static and dynamically generated tabs. Native displayed value is formatted; JavaScript value remains canonical. No financial formula changes. TEST ONLY.

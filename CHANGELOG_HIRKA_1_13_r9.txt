@@ -1,0 +1,7 @@
+HIRKA 1.13-r9 - TEST ONLY
+- Unified browser-print font fallback order (B Nazanin / B Mitra / Vazirmatn / Tahoma).
+- Applied matching typography to standalone contract print iframe.
+- Expense unit price and preset price fields: Persian digits, thousands grouping, تومان label; stored numbers stay ungrouped.
+- No licensed B Nazanin/B Mitra font embedded; actual font depends on client installation.
+- Other monetary fields and canvas-generated PDFs not yet verified for full font coverage.
+- Browser regression and PDF visual tests are required before production.

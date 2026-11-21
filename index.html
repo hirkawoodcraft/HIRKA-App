@@ -306,7 +306,7 @@ body{max-width:1100px;background:#f1efeb}body>header{border:0!important;border-r
 #tab5 #sp_b .card p,#tab5 #sp_b .card>div{overflow-wrap:anywhere}
 @media(max-width:430px){#tab5 .card{padding:13px!important}#tab5 .row>div{flex-basis:100%}#tab5>.chips button{font-size:12px}#tab5 .row>button,#tab5 .row>label.btn{flex:1 1 125px;min-width:0}}
 }
-</style><meta content="1.13" name="hirka-release"/></head>
+</style><meta content="1.13" name="hirka-release"/><style id="h9-unified-print-type">@media print{html,body,table,thead,tbody,tr,td,th,div,span,p,h1,h2,h3,h4,section,article,header,footer{font-family:"B Nazanin","B Mitra", "Vazirmatn",Tahoma,sans-serif!important}body{font-variant-numeric:normal} .inv,.warranty,.contract{color:#2B241F}}</style></head>
 <body><div id="hv2status" role="status">HIRKA / 0.33.2</div>
 <svg aria-hidden="true" height="0" style="position:absolute" width="0"><defs>
 <symbol id="i-ruler" viewbox="0 0 24 24"><path d="M3.5 15.5 15.5 3.5l5 5-12 12z"></path><path d="m7.2 11.8 2 2m1-5.2 2 2m1-5.2 2 2"></path></symbol>
@@ -485,7 +485,7 @@ let SET={co:{n:'هیرکاوود',e:'HIRKA WOOD',a:'',t:'',w:''},presets:DEF,log
 try{Object.assign(SET,JSON.parse(localStorage.getItem('hirka_cloud32_settings')))}catch(e){}
 if(!SET.logo){SET.logo=DEFLOGO;SET.color=DEFCOL}
 SET.rem=Array.isArray(SET.rem)?SET.rem:[];SET.rmTypes=Array.isArray(SET.rmTypes)?SET.rmTypes:[];
-function saveSet(){try{localStorage.setItem('hirka_cloud32_settings',JSON.stringify(SET))}catch(e){}clearTimeout(stm);stm=setTimeout(()=>{try{DB&&DB.collection('meta').doc('settings').set(JSON.parse(JSON.stringify(SET)))}catch(e){}},800)}
+function saveSet(){try{localStorage.setItem('hirka_cloud32_settings',JSON.stringify(SET))}catch(e){}clearTimeout(stm);stm=setTimeout(()=>{try{if(DB)Promise.resolve(DB.collection('meta').doc('settings').set(JSON.parse(JSON.stringify(SET)))).catch(e=>console.error('HIRKA settings save failed',e))}catch(e){console.error('HIRKA settings save failed',e)}},800)}
 const mx=(h,w,k)=>'#'+[16,8,0].map(s=>Math.round((parseInt(h.slice(1),16)>>s&255)*(1-k)+w*k).toString(16).padStart(2,'0')).join('');
 function applyTheme(h){let e=$('#thm');if(!e){e=document.createElement('style');e.id='thm';document.head.appendChild(e)}
  if(!/^#[0-9a-f]{6}$/i.test(h||'')){ACC='#b4541f';ACC2='#f3e3d7';e.textContent='';return}
@@ -514,10 +514,14 @@ function setColor(v){SET.color=v;applyTheme(v);saveSet();renderInv()}
 function clearLogo(){SET.logo=DEFLOGO;SET.color=DEFCOL;useLogo();saveSet()}
 function drawLogo(x,r,y,mw,mh){const m=LOGOIMG;if(!m||!m.naturalWidth)return;const k=Math.min(mw/m.naturalWidth,mh/m.naturalHeight);x.drawImage(m,r-m.naturalWidth*k,y,m.naturalWidth*k,m.naturalHeight*k)}
 /* costs */
+/* HIRKA r9: presentation-only currency formatting; persisted values remain ungrouped. */
+function h9MoneyRaw(v){return String(v==null?'':v).replace(/[۰-۹]/g,d=>String(d.charCodeAt(0)-1776)).replace(/[٠-٩]/g,d=>String(d.charCodeAt(0)-1632)).replace(/[٬,،\s]/g,'').replace(/[^0-9.\-]/g,'')}
+function h9MoneyShow(v){const raw=h9MoneyRaw(v);if(!raw)return '';const sign=raw.startsWith('-')?'-':'';const clean=raw.replace(/^-/,''),parts=clean.split('.');const integer=(parts[0]||'0').replace(/^0+(?=\d)/,'');const grouped=integer.replace(/\B(?=(\d{3})+(?!\d))/g,'٬');return (sign+grouped+(parts.length>1?'٫'+parts.slice(1).join(''):'')).replace(/[0-9]/g,d=>'۰۱۲۳۴۵۶۷۸۹'[+d])}
+function h9MoneyInput(el,store){const raw=h9MoneyRaw(el.value);store(raw);el.value=h9MoneyShow(raw);try{el.setSelectionRange(el.value.length,el.value.length)}catch(_){} }
 function drawCosts(){p152Migrate();S.costs=S.costs||[];
  $('#cchips').innerHTML=`<label class="h453picklabel" for="h453pick">افزودن سریع از هزینه‌های پیش‌فرض</label><select id="h453pick" aria-label="انتخاب هزینه پیش‌فرض برای افزودن" onchange="if(this.value!==''){addC(Number(this.value));this.value=''}"><option value="">انتخاب هزینه و افزودن به لیست…</option>${SET.presets.map((p,i)=>p.d?`<option value="${i}">${esc(p.d)}${p.p?' — '+fmt(p.p)+' تومان':''}</option>`:'').join('')}</select>`;
- $('#crows').innerHTML=S.costs.map((c,i)=>`<div class="card in"><div class="row"><input placeholder="شرح هزینه" value="${c.d||''}" oninput="S.costs[${i}].d=this.value;cs()"><button class="x" onclick="S.costs.splice(${i},1);drawCosts();save()">✕</button></div><div class="row"><div><label>تعداد</label><input inputmode="decimal" value="${c.q}" oninput="S.costs[${i}].q=this.value;cs()"></div><div><label>قیمت واحد (تومان)</label><input inputmode="decimal" value="${c.p||''}" oninput="S.costs[${i}].p=this.value;cs()"></div><button class="btn s" style="flex:.7;margin:0" onclick="starC(${i})">ذخیره پیش‌فرض</button></div></div>`).join('');
- $('#pre').innerHTML=SET.presets.map((p,i)=>`<div class="row"><input value="${p.d}" placeholder="نام" oninput="SET.presets[${i}].d=this.value;saveSet()" onchange="drawCosts()"><input style="flex:.6" inputmode="decimal" value="${p.p||''}" placeholder="قیمت" oninput="SET.presets[${i}].p=this.value;saveSet()"><button class="x" onclick="SET.presets.splice(${i},1);saveSet();drawCosts()">✕</button></div>`).join('');ctot()}
+ $('#crows').innerHTML=S.costs.map((c,i)=>`<div class="card in"><div class="row"><input placeholder="شرح هزینه" value="${esc(c.d||'')}" oninput="S.costs[${i}].d=this.value;cs()"><button class="x" onclick="S.costs.splice(${i},1);drawCosts();save()">✕</button></div><div class="row"><div><label>تعداد</label><input inputmode="decimal" value="${c.q}" oninput="S.costs[${i}].q=this.value;cs()"></div><div><label>قیمت واحد (تومان)</label><input inputmode="decimal" value="${h9MoneyShow(c.p||'')}" oninput="h9MoneyInput(this,v=>S.costs[${i}].p=v);cs()"></div><button class="btn s" style="flex:.7;margin:0" onclick="starC(${i})">ذخیره پیش‌فرض</button></div></div>`).join('');
+ $('#pre').innerHTML=SET.presets.map((p,i)=>`<div class="row"><input value="${esc(p.d)}" placeholder="نام" oninput="SET.presets[${i}].d=this.value;saveSet()" onchange="drawCosts()"><input style="flex:.6" inputmode="decimal" value="${h9MoneyShow(p.p||'')}" placeholder="قیمت (تومان)" oninput="h9MoneyInput(this,v=>SET.presets[${i}].p=v);saveSet()"><button class="x" onclick="SET.presets.splice(${i},1);saveSet();drawCosts()">✕</button></div>`).join('');ctot()}
 function addC(i){const p=SET.presets[i]||{d:'',p:''};S.costs.push({d:p.d,q:1,p:p.p||''});drawCosts();save()}
 function starC(i){const c=S.costs[i];if(!c.d)return;const e=SET.presets.find(p=>p.d==c.d);if(e)e.p=c.p;else SET.presets.push({d:c.d,p:c.p});saveSet();drawCosts()}
 function cs(){save();ctot()}
@@ -531,7 +535,7 @@ function ctot(){const sp=S.spaces[S.cur],one=S.spaces.length<2,c=jobCost(sp),r=o
 function ensT(){if(!S.terms)S.terms=SET.terms.map(x=>({t:x.t,v:'',on:true}))}
 function actT(){ensT();return S.terms.filter(x=>x.on&&x.t)}
 const tt=x=>(x.t||'').replace('{}',x.v?x.v:'.......');
-function drawT(){ensT();$('#terms').innerHTML=S.terms.map((x,i)=>`<div class="card in"><div class="row"><input type="checkbox" style="flex:0 0 24px;height:22px" ${x.on?'checked':''} onchange="S.terms[${i}].on=this.checked;save()"><button class="x" onclick="S.terms.splice(${i},1);drawT();save()">✕</button></div><input value="${x.t.replace(/"/g,'&quot;')}" oninput="S.terms[${i}].t=this.value;save()" onchange="drawT()">${x.t.includes('{}')?`<input style="margin-top:6px" placeholder="مقدار جای خالی (مثلا ۲۰)" value="${x.v||''}" oninput="S.terms[${i}].v=this.value;save()">`:''}</div>`).join('')}
+function drawT(){ensT();$('#terms').innerHTML=S.terms.map((x,i)=>`<div class="card in"><div class="row"><input type="checkbox" style="flex:0 0 24px;height:22px" ${x.on?'checked':''} onchange="S.terms[${i}].on=this.checked;save()"><button class="x" onclick="S.terms.splice(${i},1);drawT();save()">✕</button></div><input value="${esc(x.t)}" oninput="S.terms[${i}].t=this.value;save()" onchange="drawT()">${x.t.includes('{}')?`<input style="margin-top:6px" placeholder="مقدار جای خالی (مثلا ۲۰)" value="${esc(x.v||'')}" oninput="S.terms[${i}].v=this.value;save()">`:''}</div>`).join('')}
 function addT(){ensT();S.terms.push({t:'',v:'',on:true});drawT();save()}
 function saveDef(){ensT();SET.terms=S.terms.filter(x=>x.t).map(x=>({t:x.t}));saveSet();note('✓ به‌عنوان پیش‌فرض ذخیره شد')}
 function resetT(){S.terms=SET.terms.map(x=>({t:x.t,v:'',on:true}));drawT();save()}
@@ -569,7 +573,7 @@ function renJob(v){S.spaces[S.cur].n=v;persist();drawJobs();jbadge('#itj');jbadg
 function newSp(){save();S.spaces.push(newJob(S.spaces.length+1));S.cur=S.spaces.length-1;bindJob();swJob();togOpt(true);const j=$('#jn');if(j){j.focus();j.select()}}
 function dupSp(){save();const c=JSON.parse(JSON.stringify(S.spaces[S.cur]));c.n=(c.n||'کار')+' (کپی)';S.spaces.splice(S.cur+1,0,c);S.cur++;bindJob();swJob();toast('کپی کار ساخته شد')}
 function delSp(){if(S.spaces.length>1){S.spaces.splice(S.cur,1);S.cur=Math.max(0,S.cur-1)}else S.spaces=[newJob(1)];bindJob();togOpt(false);swJob();toast('کار حذف شد')}
-function drawSh(){$('#shc').innerHTML=S.sh.map((t,i)=>`<button class="${i==S.si?'on':''}" onclick="setSi(${i})">${t.sheet.n||'ورق '+fa(i+1)}</button>`).join('')+'<button onclick="addSh()">+ نوع ورق جدید</button>'}
+function drawSh(){$('#shc').innerHTML=S.sh.map((t,i)=>`<button class="${i==S.si?'on':''}" onclick="setSi(${i})">${esc(t.sheet.n||'ورق '+fa(i+1))}</button>`).join('')+'<button onclick="addSh()">+ نوع ورق جدید</button>'}
 function setSi(i){save();S.si=i;bindSh();load();$('#out').innerHTML='';save()}
 function addSh(){save();const c=S.sheet;S.sh.push({sheet:{n:'ورق '+fa(S.sh.length+1),W:c.W,H:c.H,K:c.K},pieces:[{n:'',l:'',w:'',q:1}]});S.si=S.sh.length-1;bindSh();load();$('#out').innerHTML='';save();$('#SN').focus()}
 function delSh(){if(S.sh.length<2)return;S.sh.splice(S.si,1);S.si=0;bindSh();load();$('#out').innerHTML='';save()}
@@ -687,11 +691,11 @@ async function calc(){const out=$('#out');out.innerHTML='<div class="card empty"
   h+='</div>';all.forEach((s,bi)=>{const isR=s.kind=='r',k=isR?bi+1:bi-rbins.length+1;h+=sheetSvg(s,bi,isR?'باقی‌مانده '+fa(k)+' ('+fa(s.W)+'×'+fa(s.H)+')':'ورق '+fa(k),ti)})})}
  catch(e){CALC=[];out.innerHTML='<div class="card warn">⚠ خطا در محاسبه: '+esc(e.message)+'</div>';return}finally{h10Allocated=null;}
  out.innerHTML=any?`<div class="legend"><span style="color:#d33"><i style="border-color:#d33"></i>PVC</span><span style="color:#2563eb"><i style="border-top-style:dashed;border-color:#2563eb"></i>شیار</span><span style="color:#16a34a"><i style="border-top-style:dotted;border-color:#16a34a"></i>برش فارسی</span><span style="color:#3b7dd8"><i style="border-top-style:dashed;border-color:#3b7dd8"></i>باقی‌مانده</span></div>`+h:`<div class="card empty">${IC('i-cabinet')}<div>اول اندازه‌ی قطعات را وارد کنید.</div></div>`}
-function toCost(ti){const c=CALC[ti];if(!h10Valid(c,ti)||!c.R.sheets.length)return;const R=c.R,q=R.sheets.length,d='ورق '+c.nm+' '+fa(R.W)+'×'+fa(R.H);
+function toCost(ti){const c=CALC[ti];if(!h10Valid(c,ti)){toast('محاسبه لیست برش تغییر کرده است؛ دوباره محاسبه کنید');return}if(!c.R.sheets.length){toast('ورق جدیدی برای افزودن به هزینه‌ها وجود ندارد');return}const R=c.R,q=R.sheets.length,d='ورق '+c.nm+' '+fa(R.W)+'×'+fa(R.H);
  const pr=(SET.presets.find(p=>p.d==d&&p.p)||SET.presets.find(p=>p.d==c.nm&&p.p)||SET.presets.find(p=>p.d=='ورق MDF'&&p.p)||{}).p||'';
  S.costs=S.costs||[];const ex=S.costs.find(x=>x.d==d);
  if(ex){ex.q=q;if(!ex.p&&pr)ex.p=pr;toast('تعداد ورق در هزینه‌ها به‌روز شد')}else{S.costs.push({d,q,p:pr});toast('✓ '+fa0(q)+' ورق به هزینه‌ها اضافه شد')}
- save();tab(4)}
+ syncJob();save();tab(4)}
 const rid=()=>'m'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),r1=v=>Math.round(v*10)/10;
 function h10Signature(t){return JSON.stringify([t.sheet,t.pieces,t.ur||[]]);}
 function h10Valid(c,ti){return c&&c.project===S&&c.job===curSp()&&S.sh[ti]&&c.signature===h10Signature(S.sh[ti])&&!c.R.bad.length;}
@@ -701,14 +705,14 @@ function useRem(ti,btn){const c=CALC[ti];if(!h10Valid(c,ti)||!S.pid||c.consumed)
 /* invoice */
 // گزینه‌های آماده «حمل» و «نصب» از فاکتور حذف شدند.
 $('#chips').remove();
-function drawI(){jbadge('#itj');$('#items').innerHTML=S.items.map((it,i)=>`<div class="card in"><div class="row"><input placeholder="شرح کالا (مثلا لولا بلوم)" value="${it.d||''}" oninput="S.items[${i}].d=this.value;save()"><button class="x" onclick="S.items.splice(${i},1);drawI();save()">✕</button></div><div class="row"><div><label>تعداد</label><input inputmode="decimal" value="${it.q}" oninput="S.items[${i}].q=this.value;save()"></div><div><label>قیمت واحد (تومان)</label><input inputmode="decimal" value="${it.p||''}" oninput="S.items[${i}].p=this.value;save()"></div></div></div>`).join('')}
+function drawI(){jbadge('#itj');$('#items').innerHTML=S.items.map((it,i)=>`<div class="card in"><div class="row"><input placeholder="شرح کالا (مثلا لولا بلوم)" value="${esc(it.d||'')}" oninput="S.items[${i}].d=this.value;save()"><button class="x" onclick="S.items.splice(${i},1);drawI();save()">✕</button></div><div class="row"><div><label>تعداد</label><input inputmode="decimal" value="${it.q}" oninput="S.items[${i}].q=this.value;save()"></div><div><label>قیمت واحد (تومان)</label><input inputmode="decimal" value="${it.p||''}" oninput="S.items[${i}].p=this.value;save()"></div></div></div>`).join('')}
 function addI(d,q,p){S.items.push({d,q,p});drawI();save()}
 function invRows(){const gs=S.spaces.map(s=>({n:s.n||'',it:(s.items||[]).filter(i=>i.d||nz(i.p))})).filter(g=>g.it.length),G=S.grp!==false&&gs.length>1,r=[];let n=0;
  gs.forEach(g=>{if(G)r.push({k:'g',n:g.n||'—',sub:g.it.reduce((a,i)=>a+nz(i.q)*nz(i.p),0)});g.it.forEach(i=>{n++;r.push({k:'i',n,d:i.d||'',q:nz(i.q),p:nz(i.p),t:nz(i.q)*nz(i.p)})})});return r}
 function totals(){const sub=allItems().reduce((a,i)=>a+nz(i.q)*nz(i.p),0),d=nz(S.disc),t=sub-d,a=nz(S.adv);return{sub,d,t,a,rem:t-a}}
 function renderInv(){
  const T=totals(),c=S.cust||{},date=invDate(),R=invRows();
- $('#inv').innerHTML=`${lhHtml()}<div class="hd" style="color:#777;margin-top:20px"><span>تاریخ: ${date}</span><span>${S.no?'شماره: '+toFa(S.no):''}</span></div>
+ $('#inv').innerHTML=`${lhHtml()}<div class="hd" style="color:#777;margin-top:20px"><span>تاریخ: ${date}</span><span>${S.no?'شماره: '+esc(toFa(S.no)):''}</span></div>
  <div style="margin-top:14px"><b>مشتری:</b> ${esc(c.n)||'—'} ${c.p?` &nbsp;|&nbsp; <b>تلفن:</b> ${toFa(esc(c.p))}`:''}</div>${c.a?`<div style="font-size:13px;color:#555">${esc(c.a)}</div>`:''}
  <table><tr><th>#</th><th>شرح</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr>`+
  R.map(r=>r.k=='g'?`<tr class="gr"><td colspan="4">${esc(r.n)}</td><td>${fmt(r.sub)}</td></tr>`:`<tr><td>${fa0(r.n)}</td><td>${esc(r.d)}</td><td>${fa(r.q)}</td><td>${fmt(r.p)}</td><td>${fmt(r.t)}</td></tr>`).join('')+`</table>
@@ -756,9 +760,10 @@ function a4Pages(cv){const PH=1754,ft=cv.ft||[],CH=ft.length?PH-110:PH,out=[];le
   const c=document.createElement('canvas');c.width=1240;c.height=PH;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,1240,PH);g.drawImage(cv,0,st,1240,en-st,0,0,1240,en-st);
   if(ft.length){g.fillStyle=ACC2;g.fillRect(0,PH-100,1240,100);g.fillStyle=ACC;g.fillRect(0,PH-100,1240,5);g.direction='rtl';g.font='600 24px '+FF;g.textAlign='center';g.fillStyle='#333';let tx2=ft.join('     •     ');while(tx2&&g.measureText(tx2).width>1100)tx2=tx2.slice(0,-1);g.fillText(tx2,620,PH-42)}
   out.push(c);st=en}return out}
+const HIRKA_PDF_FONT='"B Nazanin", "B Mitra", "Vazirmatn", "Noto Naskh Arabic", Tahoma, sans-serif';
 function mk(h){const c=document.createElement('canvas');c.width=1240;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,1240,h);x.direction='rtl';return[c,x]}
-function tx(x,s,px,y,al,sz,wt,col){x.font=(wt||400)+' '+sz+'px '+FF;x.fillStyle=col||'#222';x.textAlign=al;x.fillText(s,px,y)}
-function newPager(){const P={pages:[],x:null,y:0,np(){const[c,x]=mk(1754);P.pages.push(c);P.x=x;P.y=90},need(h){if(P.y+h>1690)P.np()}};P.np();return P}
+function tx(x,s,px,y,al,sz,wt,col){x.font=(wt||400)+' '+sz+'px '+HIRKA_PDF_FONT;x.fillStyle=col||'#222';x.textAlign=al;x.fillText(s,px,y)}
+function newPager(){const P={pages:[],x:null,y:0,np(){const[c,x]=mk(1754);P.pages.push(c);P.x=x;P.y=154},need(h){if(P.y+h>1690)P.np()}};P.np();return P}
 function arcP(x,a,b,k,f){const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,h=L*k,r=(L*L/4+h*h)/(2*h),sg=f?-1:1,nx=-dy/L*sg,ny=dx/L*sg,mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,X=mx+nx*(h-r),Y=my+ny*(h-r),a0=Math.atan2(a[1]-Y,a[0]-X),a1=Math.atan2(b[1]-Y,b[0]-X),ap=Math.atan2(my+ny*h-Y,mx+nx*h-X),N=v=>(v%6.2832+6.2832)%6.2832;x.arc(X,Y,r,a0,a1,N(ap-a0)>N(a1-a0))}
 function cubeP(x,a,b){const x0=Math.min(a[0],b[0]),x1=Math.max(a[0],b[0]),y0=Math.min(a[1],b[1]),y1=Math.max(a[1],b[1]),d=Math.min(x1-x0,y1-y0)*.32;
  x.rect(x0,y0+d,x1-x0-d,y1-y0-d);x.moveTo(x0,y0+d);x.lineTo(x0+d,y0);x.lineTo(x1,y0);x.lineTo(x1-d,y0+d);x.moveTo(x1,y0);x.lineTo(x1,y1-d);x.lineTo(x1-d,y1)}
@@ -778,27 +783,33 @@ function cutPages(){const out=[];eachSh((t,i)=>out.push(...cutPageOne(t.sheet.n|
 function cutPageOne(nm){
  const R0=pack(),{sheets,rbins,W,H,list}=R0;if(!list.length)return[];
  const P=newPager(),R=1150,L=90,dir={a:'آزاد',h:'افقی',v:'عمودی'};
- const JN=S.spaces.length>1?(S.spaces[S.cur].n||''):'';tx(P.x,'لیست برش: '+nm,620,P.y,'center',46,800,ACC);P.y+=(JN?50:70);if(JN){tx(P.x,'کار: '+JN,620,P.y,'center',30,600,'#777');P.y+=56}
- tx(P.x,'ورق: '+fa(W)+' × '+fa(H)+' سانتی‌متر     ضخامت اره: '+fa(nz(S.sheet.K)),R,P.y,'right',28,400,'#555');P.y+=60;
- const PN={1:'PVC',2:'شیار',4:'فارسی'},parts=v=>[1,2,4].filter(b=>v&b),SX=[571,434,297,160],NX=[1150,925,845,765,690],VL=[640,503,366,229];
+ const JN=S.spaces.length>1?(S.spaces[S.cur].n||''):'';
+ // Stable references use the original piece index, not the packing/sorting order.
+ const pieceRef=i=>fa0(i+1),ink='#2B241F',walnut='#684328',cream='#D8C7B2',brass='#B08D57';
+ // One global header is drawn by hirkaWorkshopFinish; section heading stays in the content area.
+ if(JN){tx(P.x,'پروژه: '+JN,R,P.y,'right',30,700,ink);P.y+=48}
+ tx(P.x,'نقشه برش  |  '+nm,R,P.y,'right',38,800,ink);P.y+=54;
+ tx(P.x,'ابعاد ورق '+fa(W)+' × '+fa(H)+' سانتی‌متر    •    ضخامت اره '+fa(nz(S.sheet.K)),R,P.y,'right',25,500,walnut);P.y+=58;
+ const PN={1:'PVC',2:'شیار',4:'فارسی'},parts=v=>[1,2,4].filter(b=>v&b),SX=[450,348,246,144],NX=[1150,795,707,622,540],VL=[490,400,312,220];
  const row=(c,hd,p,z)=>{const np=hd?1:Math.max(1,...p.e.map(v=>parts(v).length)),H=56+(np-1)*30;
   if(!hd&&P.y+H+10>1690){P.np();hdr()}
   const x=P.x,y=P.y,w=hd?700:400;
-  if(hd){x.fillStyle=ACC2;x.fillRect(L,y-38,R-L+20,54)}
+  if(hd){x.fillStyle=cream;x.fillRect(L,y-38,R-L+20,54)}
   else{if(z){x.fillStyle='#f6f2ec';x.fillRect(L,y-38,R-L+20,H)}x.fillStyle='#e2ddd5';x.fillRect(L,y-38+H-2,R-L+20,2)}
   x.fillStyle='#ddd';VL.forEach(v=>x.fillRect(v,y-38,2,hd?54:H));
-  c.forEach((v,i)=>tx(x,v,NX[i],y,i?'center':'right',24,w));
+  c.forEach((v,i)=>tx(x,v,NX[i],y,i?'center':'right',i?22:24,w));
   if(hd)['طول ۱','طول ۲','کله ۱','کله ۲'].forEach((n,j)=>tx(x,n,SX[j],y,'center',24,700));
   else p.e.forEach((ev,j)=>{const ps=parts(ev);if(!ps.length)tx(x,'—',SX[j],y,'center',24,400,'#aaa');else ps.forEach((b,k)=>tx(x,PN[b],SX[j],y+k*30,'center',24,700,EC[b]))});
   P.y+=hd?56:H};
- const hdr=()=>row(['نام قطعه','طول','عرض','تعداد','جهت'],1);
+ const hdr=()=>row(['ردیف / نام قطعه','طول','عرض','تعداد','جهت'],1);
  hdr();
- S.pieces.filter(p=>nz(p.l)&&nz(p.w)).forEach((p,i)=>{migE(p);row([(p.n||'—').slice(0,14),fa(nz(p.l)),fa(nz(p.w)),(Math.max(1,Math.round(nz(p.q))||1)).toLocaleString('fa-IR'),dir[p.o||'a']],0,p,i%2)});
+ S.pieces.filter(p=>nz(p.l)&&nz(p.w)).forEach((p,i)=>{migE(p);row([pieceRef(i)+'  |  '+(p.n||'—').slice(0,27),fa(nz(p.l)),fa(nz(p.w)),(Math.max(1,Math.round(nz(p.q))||1)).toLocaleString('fa-IR'),dir[p.o||'a']],0,p,i%2)});
  P.y+=14;P.need(130);[['طول ۱ = ضلع بلند بالا ، طول ۲ = ضلع بلند پایین ، کله ۱ = ضلع کوتاه راست ، کله ۲ = ضلع کوتاه چپ',21],['قطعه را با طول افقی تصور کنید.  علامت «—» یعنی آن ضلع ساده است.',21]].forEach(([a,z])=>{tx(P.x,a,R,P.y,'right',z,400,'#555');P.y+=32});
  const waste=wasteOf(R0);
  P.y+=40;P.need(100);tx(P.x,sheets.length.toLocaleString('fa-IR')+' ورق لازم است  |  پرت: '+fa(waste)+'٪'+(rbins.length?'  |  با '+rbins.length.toLocaleString('fa-IR')+' باقی‌مانده':''),R,P.y,'right',36,800,'#2f7d4f');P.y+=50;{const E=edges();if(E.pv||E.sh||E.fb){let ax=R;[[1,E.pv],[2,E.sh],[4,E.fb]].forEach(([k,v])=>{const x=P.x;x.font='700 28px '+FF;const lw=x.measureText(PN[k]).width;tx(x,PN[k],ax,P.y,'right',28,700,EC[k]);tx(x,fa(v)+' م',ax-lw-14,P.y,'right',28,700,'#222');ax-=380});P.y+=50}}
  rbins.concat(sheets).forEach((sh,i)=>{const W=sh.W,H=sh.H,dw=1060*W/R0.W,dh=dw*H/W;P.need(dh+110);const x=P.x;
-  tx(x,(sh.kind=='r'?'باقی‌مانده '+(i+1).toLocaleString('fa-IR')+' ('+fa(sh.W)+'×'+fa(sh.H)+')':'ورق '+(i-rbins.length+1).toLocaleString('fa-IR'))+'  ('+sh.pl.length.toLocaleString('fa-IR')+' قطعه)',R,P.y+20,'right',30,700);
+  x.fillStyle='#F4EEE6';x.fillRect(L,P.y-18,R-L+20,65);x.fillStyle=brass;x.fillRect(R+12,P.y-18,8,65);
+  tx(x,(sh.kind=='r'?'باقی‌مانده '+fa0(i+1)+' ('+fa(sh.W)+'×'+fa(sh.H)+')':'ورق '+fa0(i-rbins.length+1))+'   |   '+fa0(sh.pl.length)+' قطعه',R-12,P.y+23,'right',30,800,ink);
   [[1,'PVC',700],[2,'شیار',500],[4,'برش فارسی',300]].forEach(([k,t,ax])=>{x.strokeStyle=EC[k];x.lineWidth=k==1?5:2.5;x.setLineDash(k==2?[14,7]:k==4?[3,7]:[]);x.beginPath();x.moveTo(ax-60,P.y+12);x.lineTo(ax,P.y+12);x.stroke();x.setLineDash([]);tx(x,t,ax-72,P.y+20,'right',24,600,'#444')});
   const oy=P.y+50,s=dw/W,ox=L+10;x.fillStyle='#fff';x.fillRect(ox,oy,dw,dh);x.strokeStyle='#222';x.lineWidth=3;x.strokeRect(ox,oy,dw,dh);
   x.direction='ltr';
@@ -808,8 +819,14 @@ function cutPageOne(nm){
     x.strokeStyle=EC[g.k];x.lineWidth=g.k==1?5:2.5;x.setLineDash(g.k==2?[14,7]:g.k==4?[3,7]:[]);x.beginPath();x.moveTo(ax+g.n[0]*d+ux*e,ay+g.n[1]*d+uy*e);x.lineTo(bx+g.n[0]*d-ux*e,by+g.n[1]*d-uy*e);x.stroke()});
    x.restore();x.setLineDash([]);x.strokeStyle='#222';x.fillStyle='#222';
    const cx0=px+pw/2,cy0=py+ph/2;
-   if(pw>150&&ph>86&&p.n){tx(x,String(p.n).slice(0,16),cx0,cy0-12,'center',20,400,'#666');tx(x,fa(p.w)+'×'+fa(p.h),cx0,cy0+20,'center',22,600)}
-   else if(pw>90&&ph>34)tx(x,fa(p.w)+'×'+fa(p.h),cx0,cy0+8,'center',22,600)});
+   // Number matches the numbered cutting-list row; do not print long names on the layout.
+   const label=pieceRef(p.i);
+   if(pw>=44&&ph>=30){
+    const radius=Math.min(22,Math.max(12,Math.min(pw,ph)*.20));
+    x.fillStyle=ink;x.beginPath();x.arc(cx0,cy0-(ph>=65?12:0),radius,0,Math.PI*2);x.fill();
+    x.direction='ltr';tx(x,label,cx0,cy0-(ph>=65?12:0)+radius*.34,'center',Math.min(21,radius*1.15),800,'#fff');
+    if(pw>=100&&ph>=75){x.direction='rtl';tx(x,fa(p.w)+'×'+fa(p.h),cx0,cy0+28,'center',19,600,walnut)}
+   }else if(pw>=24&&ph>=18){x.direction='ltr';tx(x,label,cx0,cy0+6,'center',Math.min(17,Math.max(10,ph*.45)),800,ink)}});
   sh.free.filter(f=>f.big).forEach(f=>{const fx=ox+f.x*s,fy=oy+f.y*s,fw=f.w*s,fh=f.h*s;x.save();x.strokeStyle='#3b7dd8';x.fillStyle='rgba(59,125,216,.10)';x.lineWidth=2.5;x.setLineDash([12,8]);x.fillRect(fx,fy,fw,fh);x.strokeRect(fx,fy,fw,fh);x.setLineDash([]);if(fw>150&&fh>60){x.fillStyle='#2b5ea8';x.font='700 22px '+FF;x.textAlign='center';x.fillText(fa(f.w)+'×'+fa(f.h),fx+fw/2,fy+fh/2+8)}x.restore()});
    x.direction='rtl';P.y+=dh+110});
  return P.pages}
@@ -836,8 +853,8 @@ function pdfBlob(cvs){return pdfJ(cvs.map(c=>{const b=Uint8Array.from(atob(c.toD
 function costPages(sp){const P=newPager(),R=1150,L=90,T=totals(),multi=S.spaces.length>1;
  tx(P.x,multi?'هزینه‌ها — کار: '+(sp.n||''):'هزینه‌های پروژه'+(S.pn?': '+S.pn:''),R,P.y,'right',44,800,ACC);P.y+=70;
  const row=(a,b,c,d,hd)=>{P.need(60);const x=P.x,y=P.y,w=hd?700:400;if(hd){x.fillStyle=ACC2;x.fillRect(L,y-38,R-L+20,54)}else{x.fillStyle='#eee';x.fillRect(L,y+16,R-L+20,2)}
-  tx(x,a,R,y,'right',26,w);tx(x,b,560,y,'center',26,w);tx(x,c,370,y,'center',26,w);tx(x,d,190,y,'center',26,w);P.y+=56};
- row('شرح','تعداد','قیمت واحد','جمع',1);let tot=0;
+  tx(x,a,R,y,'right',26,w);tx(x,b,560,y,'center',26,w);tx(x,c,370,y,'center',hd?22:26,w);tx(x,d,190,y,'center',hd?22:26,w);P.y+=56};
+ row('شرح','تعداد','قیمت واحد (تومان)','جمع (تومان)',1);let tot=0;
  (S.costs||[]).filter(c=>c.d||nz(c.p)).forEach(c=>{const t=nz(c.q)*nz(c.p);tot+=t;row((c.d||'').slice(0,26),fa(nz(c.q)),fmt(nz(c.p)),fmt(t))});
  P.y+=30;P.need(200);const rev=multi?jobSub(sp):T.t,pr=rev-tot;
  [['جمع هزینه‌ها',tot,'#222'],[multi?'مبلغ فاکتور این کار':'مبلغ فاکتور',rev,'#222'],['سود تقریبی',pr,pr>=0?'#2f7d4f':'#c33']].forEach(([a,b,c])=>{tx(P.x,a,R,P.y,'right',30,700,c);tx(P.x,fmt(b)+' تومان',L,P.y,'left',30,700,c);P.y+=56});
@@ -854,9 +871,43 @@ function sumPages(){const P=newPager(),R=1150,L=90,T=totals(),need={},E={pv:0,sh
  const ks=Object.keys(need);if(ks.length){P.y+=24;P.need(120);tx(P.x,'ورق مورد نیاز (جمع همه‌ی کارها)',R,P.y,'right',32,800,ACC);P.y+=58;ks.forEach(k=>{P.need(54);tx(P.x,k,R,P.y,'right',27,600);tx(P.x,fa0(need[k])+' ورق',L,P.y,'left',27,800);P.y+=52})}
  if(E.pv||E.sh||E.fb){P.y+=18;P.need(100);tx(P.x,'PVC: '+fa(E.pv)+' م   |   شیار: '+fa(E.sh)+' م   |   برش فارسی: '+fa(E.fb)+' م',R,P.y,'right',27,600,'#444');P.y+=50}
  return P.pages}
-function workPages(){const out=[],multi=S.spaces.length>1;if(multi)out.push(...sumPages());
- eachJob((sp,i)=>{const m=measPageOne(sp),c=cutPages(),has=(S.costs||[]).some(x=>x.d||nz(x.p))||(S.items||[]).length;out.push(...m,...c);if(!multi||has)out.push(...costPages(sp))});
- return out}
+// Workshop-only PDF design system. It decorates the already rendered pages;
+// measurements, cutting layouts, costs and the UI remain untouched.
+function hirkaWorkshopFinish(pages,sections){
+ const C={ink:'#2B241F',wood:'#684328',cream:'#D8C7B2',brass:'#B08D57',paper:'#FAF7F2'};
+ const all=pages.length;
+ pages.forEach((canvas,i)=>{
+  const g=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  const section=sections[i]||'گزارش کارگاه';
+  g.save();g.direction='rtl';
+  // Decorative top strip uses the reserved 0..78 px margin of newPager.
+  g.fillStyle=C.ink;g.fillRect(0,0,W,72);
+  g.fillStyle=C.brass;g.fillRect(0,72,W,5);
+  g.fillStyle=C.wood;g.fillRect(0,0,12,H);
+  g.fillStyle=C.brass;g.fillRect(W-12,0,12,H);
+  g.fillStyle=C.cream;g.font='700 24px ' + HIRKA_PDF_FONT;g.textAlign='left';
+  g.fillText('HIRKA  /  WOODCRAFT',76,43);
+  g.fillStyle='#FFFFFF';g.textAlign='right';g.font='700 26px ' + HIRKA_PDF_FONT;
+  g.fillText(section,1160,44);
+  // Footer remains in the existing reserved page-bottom zone.
+  g.fillStyle=C.ink;g.fillRect(0,H-54,W,54);
+  g.fillStyle=C.brass;g.fillRect(0,H-58,W,4);
+  g.fillStyle=C.cream;g.font='500 19px ' + HIRKA_PDF_FONT;g.textAlign='right';
+  g.fillText('هیرکا  |  کیفیتی که قابل اثبات است',1150,H-19);
+  g.textAlign='left';g.fillText('صفحه '+fa0(i+1)+' از '+fa0(all),88,H-19);
+  // Restrained registration corners for a print-oriented technical document.
+  g.strokeStyle=C.brass;g.lineWidth=2;
+  [[33,96,1,1],[W-33,96,-1,1],[33,H-86,1,-1],[W-33,H-86,-1,-1]].forEach(([x,y,dx,dy])=>{g.beginPath();g.moveTo(x,y+dy*17);g.lineTo(x,y);g.lineTo(x+dx*17,y);g.stroke()});
+  g.restore();
+ });
+ return pages;
+}
+function workPages(){const out=[],sections=[],multi=S.spaces.length>1;
+ const append=(arr,title)=>{out.push(...arr);for(let i=0;i<arr.length;i++)sections.push(title)};
+ if(multi)append(sumPages(),'خلاصه پروژه');
+ eachJob((sp,i)=>{const m=measPageOne(sp),c=cutPages(),has=(S.costs||[]).some(x=>x.d||nz(x.p))||(S.items||[]).length;
+  append(m,'اندازه‌برداری');append(c,'لیست و نقشه برش');if(!multi||has)append(costPages(sp),'گزارش هزینه‌ها')});
+ return hirkaWorkshopFinish(out,sections)}
 async function savePDF(k){const dl=await getDl();
  if(!dl){note('⚠ ذخیره فایل در این نمایش ممکن نیست');return}
  try{await document.fonts.load('600 24px Vazirmatn')}catch(e){}
@@ -869,7 +920,7 @@ function load(){const c=S.cust||{};$('#cn').value=c.n||'';$('#cp').value=c.p||''
 /* measurements + sketch */
 bindJob();
 let tool='p',col='#222',cur=null,sw=4,flip=false;
-const cvs=$('#cv'),cx=cvs.getContext('2d'),FF='Vazirmatn,Tahoma,sans-serif';
+const cvs=$('#cv'),cx=cvs.getContext('2d'),FF='Vazirmatn, Noto Sans Arabic, Tahoma, sans-serif';
 const curSp=()=>S.spaces[S.cur]||S.spaces[0];
 const VW=[['m','صفحه ۱'],['f',''],['b',''],['l',''],['r',''],['u',''],['d','']];
 function sketchPages(sp){const keys=['m',...VW.slice(1).map(v=>v[0]).filter(k=>Object.prototype.hasOwnProperty.call(sp.pgs||{},k)||sp.v===k),...Object.keys(sp.pgs||{}).filter(k=>!VW.some(v=>v[0]===k))];return keys.map((k,i)=>[k,'صفحه '+(i+1).toLocaleString('fa-IR')]);}
@@ -927,7 +978,7 @@ cvs.onpointerup=cvs.onpointercancel=()=>{if(ers){ers=false;eps=null;redraw();ret
  snap();pg().st.push(c);persist();redraw();drawV()};
 const MC=[];
 $('#mch').innerHTML=MC.map(c=>`<button onclick="addR('${c}')">+ ${c}</button>`).join('');
-function drawRows(){$('#rows').innerHTML=curSp().rows.map((x,i)=>`<div class="row">${x.k?`<span class="nb">${x.k}</span>`:''}<input placeholder="توضیح (مثلا طول دیوار)" value="${esc(x.d)}" oninput="curSp().rows[${i}].d=this.value;persist()"><input inputmode="decimal" style="flex:.6" value="${x.v||''}" oninput="curSp().rows[${i}].v=this.value;persist()"><select style="flex:.8" onchange="curSp().rows[${i}].u=this.value;persist()">${['سانتی‌متر','متر','میلی‌متر'].map(u=>`<option ${x.u==u?'selected':''}>${u}</option>`).join('')}</select><button class="x" onclick="curSp().rows.splice(${i},1);drawRows();persist()">✕</button></div>`).join('')}
+function drawRows(){$('#rows').innerHTML=curSp().rows.map((x,i)=>`<div class="row">${x.k?`<span class="nb">${x.k}</span>`:''}<input placeholder="توضیح (مثلا طول دیوار)" value="${esc(x.d)}" oninput="curSp().rows[${i}].d=this.value;persist()"><input inputmode="decimal" style="flex:.6" value="${esc(x.v||'')}" oninput="curSp().rows[${i}].v=this.value;persist()"><select style="flex:.8" onchange="curSp().rows[${i}].u=this.value;persist()">${['سانتی‌متر','متر','میلی‌متر'].map(u=>`<option ${x.u==u?'selected':''}>${u}</option>`).join('')}</select><button class="x" onclick="curSp().rows.splice(${i},1);drawRows();persist()">✕</button></div>`).join('')}
 function addR(d){curSp().rows.push({d,v:'',u:'سانتی‌متر'});drawRows();persist()}
 function drawSp(){drawJobs();drawV();drawRows();redraw();setTool(tool);const n=$('#sknote');if(n)n.value=pg().note||''}
 async function savePng(){const dl=await getDl();if(!dl)return;
@@ -1277,10 +1328,23 @@ const PF=['dt','terms','cust','disc','adv','spaces','cur','pn','ps','no','grp','
 const clean=o=>typeof o=='string'?o.replace(/[<>"]/g,c=>({'<':'‹','>':'›','"':'”'}[c])):Array.isArray(o)?o.map(clean):o&&typeof o=='object'?Object.fromEntries(Object.entries(o).map(([k,v])=>[k,clean(v)])):o;
 const snapP=()=>{syncJob();const o={};PF.forEach(k=>{if(S[k]!==undefined)o[k]=S[k]});o.updated=Date.now();return o};
 function setSync(t){const e=$('#psync');if(e)e.textContent=t;const d=$('#psdot');if(d)d.className='dot'+(t.includes('⚠')?' bad':t.startsWith('در حال')?' busy':'')}
-async function writeNow(){if(!DB||!S.pid)return;const d=snapP();
- 
- try{await pcol.doc(S.pid).set(d);setSync('✓ ذخیره شد')}catch(e){setSync('⚠ ذخیره نشد')}}
-function touch(){if(!DB||!S.pid)return;setSync('در حال ذخیره…');clearTimeout(timer);timer=setTimeout(writeNow,1200)}
+// Serialize writes to prevent an older snapshot from overwriting a newer one.
+let hirkaSaveQueue=Promise.resolve();
+async function writeNow(){
+ if(!DB||!S.pid)return;
+ const id=S.pid,d=snapP(),collection=pcol;
+ const operation=hirkaSaveQueue.catch(()=>{}).then(()=>collection.doc(id).set(d));
+ hirkaSaveQueue=operation;
+ try{
+  await operation;
+  if(S.pid===id)setSync('✓ ذخیره شد');
+ }catch(e){
+  if(S.pid===id)setSync('⚠ ذخیره نشد');
+  console.error('HIRKA project save failed',e);
+  throw e;
+ }
+}
+function touch(){if(!DB||!S.pid)return;setSync('در حال ذخیره…');clearTimeout(timer);timer=setTimeout(()=>{writeNow().catch(e=>projectError(e))},1200)}
 async function flush(){clearTimeout(timer);await writeNow()}
 function newData(){return{terms:SET.terms.map(x=>({t:x.t,v:'',on:true})),cust:{},disc:'',adv:'',spaces:[newJob(1)],cur:0,grp:true,rm:[],dz:null}}
 let projectBusy=false;
@@ -1307,7 +1371,7 @@ async function newProject(copy){if(projectBusy)return;projectBusy=true;
 function setPN(){S.pn=$('#pn').value;persist()}
 function setPS(){S.ps=$('#ps').value;paintPS();persist()}
 function paintPS(){const e=$('#ps');if(!e)return;const c=SC[e.value]||SC['برآورد'];e.style.color=c;e.style.borderColor=c+'66'}
-async function delP(){const id=S.pid;clearTimeout(timer);S.pid=null;try{await pcol.doc(id).delete()}catch(e){}phPurge(id);tab(0)}
+async function delP(){if(!S.pid)return;await h104DeleteProject(S.pid,null)}
 function hasLocal(){return(S.spaces||[]).some(s=>(s.st||[]).length||(s.rows||[]).length||(s.items||[]).length||(s.sh||[]).some(t=>(t.pieces||[]).some(p=>p.l)))||(S.items||[]).length>0||(S.pieces||[]).some(p=>p.l)}
 const SC={'برآورد':'#c99a2e','قطعی':'#3b7dd8','در حال ساخت':'#d9622b','تحویل شد':'#2f8f5b','پرداخت شد':'#1f6f43'};
 function drawList(){const q=($('#srch').value||'').trim(),pj=p=>p.spaces||[],pit=p=>pj(p).flatMap(s=>s.items||[]).concat(p.items||[]);
@@ -1315,13 +1379,20 @@ function drawList(){const q=($('#srch').value||'').trim(),pj=p=>p.spaces||[],pit
  $('#pstat').innerHTML=[[plist.length,'کل پروژه‌ها','i-folder'],[plist.filter(p=>p.ps=='در حال ساخت').length,'در حال ساخت','i-tool'],[plist.filter(p=>p.ps=='تحویل شد').length,'تحویل شده','i-check']].map(([v,t,ic])=>`<div class="stat"><span class="ico">${IC(ic)}</span><b>${v.toLocaleString('fa-IR')}</b><span>${t}</span></div>`).join('');
  dash17Render(plist);
  $('#plist').innerHTML=a.map(p=>{const c=SC[p.ps]||SC['برآورد'],cu=p.cust||{},amt=pit(p).reduce((s,i)=>s+nz(i.q)*nz(i.p),0)-nz(p.disc),nj=pj(p).length,nm=p.pn||cu.n||'بدون نام';
-  return `<div class="card pc" onclick="openP('${p.id}')"><div class="av" style="background:linear-gradient(145deg,${c},color-mix(in srgb,${c} 60%,#000))">${esc([...nm][0]||'؟')}</div><div class="pcb"><div class="pt"><b>${esc(nm)}</b><span class="chip" style="background:${c}22;color:${c}">${p.ps||'برآورد'}</span></div><div class="pm"><span>${p.no?'فاکتور '+toFa(p.no):''}${cu.n&&cu.n!=nm?' · '+esc(cu.n):''}${nj>1?' · '+fa0(nj)+' کار':''}</span><span>${new Date(p.updated||0).toLocaleDateString('fa-IR-u-ca-persian')}</span></div><div class="pm"><span>${cu.p?'📞 '+toFa(esc(cu.p)):''}${rmBd(p)}</span><b>${amt>0?fmt(amt)+' <small>تومان</small>':''}</b></div><button type="button" class="h104-delete" title="حذف این پروژه" aria-label="حذف پروژه ${esc(nm)}" onclick="event.stopPropagation();h104DeleteProject('${p.id}',this)">حذف پروژه</button></div></div>`}).join('')||`<div class="card empty">${IC('i-cabinet')}<div><b>${plist.length?'نتیجه‌ای پیدا نشد':'هنوز پروژه‌ای نیست'}</b></div>${plist.length?'':'<div style="font-size:13px;margin-top:4px">«پروژه‌ی جدید» را بزنید و اولین کار را شروع کنید.</div>'}</div>`;
+  return `<div class="card pc" onclick="openP('${p.id}')"><div class="av" style="background:linear-gradient(145deg,${c},color-mix(in srgb,${c} 60%,#000))">${esc([...nm][0]||'؟')}</div><div class="pcb"><div class="pt"><b>${esc(nm)}</b><span class="chip" style="background:${c}22;color:${c}">${esc(p.ps||'برآورد')}</span></div><div class="pm"><span>${p.no?'فاکتور '+esc(toFa(p.no)):''}${cu.n&&cu.n!=nm?' · '+esc(cu.n):''}${nj>1?' · '+fa0(nj)+' کار':''}</span><span>${new Date(p.updated||0).toLocaleDateString('fa-IR-u-ca-persian')}</span></div><div class="pm"><span>${cu.p?'📞 '+toFa(esc(cu.p)):''}${rmBd(p)}</span><b>${amt>0?fmt(amt)+' <small>تومان</small>':''}</b></div><button type="button" class="h104-delete" title="حذف این پروژه" aria-label="حذف پروژه ${esc(nm)}" onclick="event.stopPropagation();h104DeleteProject('${p.id}',this)">حذف پروژه</button></div></div>`}).join('')||`<div class="card empty">${IC('i-cabinet')}<div><b>${plist.length?'نتیجه‌ای پیدا نشد':'هنوز پروژه‌ای نیست'}</b></div>${plist.length?'':'<div style="font-size:13px;margin-top:4px">«پروژه‌ی جدید» را بزنید و اولین کار را شروع کنید.</div>'}</div>`;
  $('#imp').innerHTML=(!plist.length&&hasLocal())?'<button class="btn s" onclick="newProject(true)">انتقال اطلاعات قبلی این گوشی به یک پروژه</button>':'';drawRmSum()}
 async function localDB(){
  const K='hirka_cloud32_db',subs=new Set();
  const db=await new Promise((resolve,reject)=>{const q=indexedDB.open('hirka_cloud32_core',1);q.onupgradeneeded=()=>q.result.createObjectStore('records');q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);q.onblocked=()=>reject(Error('blocked'))});
  const run=(mode,work)=>new Promise((resolve,reject)=>{const tx=db.transaction('records',mode),st=tx.objectStore('records');let result;tx.oncomplete=()=>resolve(result);tx.onerror=tx.onabort=()=>reject(tx.error||Error('transaction failed'));work(st,v=>result=v)});
- await run('readwrite',(st)=>{const q=st.get('__migrated');q.onsuccess=()=>{if(q.result)return;const raw=localStorage.getItem(K),old=raw?JSON.parse(raw):{};for(const [c,docs] of Object.entries(old))for(const [id,v] of Object.entries(docs))st.put(v,c+'/'+id);st.put(true,'__migrated')}});
+ await run('readwrite',(st)=>{const q=st.get('__migrated');q.onsuccess=()=>{if(q.result)return;const raw=localStorage.getItem(K);let old={};
+ try{old=raw?JSON.parse(raw):{}}catch(e){console.error('HIRKA legacy data migration parse failed',e);st.transaction.abort();return}
+ if(!old||typeof old!=='object'||Array.isArray(old)){st.transaction.abort();return}
+ for(const [c,docs] of Object.entries(old)){
+  if(!docs||typeof docs!=='object'||Array.isArray(docs)){st.transaction.abort();return}
+  for(const [id,v] of Object.entries(docs))st.put(v,c+'/'+id);
+ }
+ st.put(true,'__migrated')}});
  const list=c=>run('readonly',(st,done)=>{const out=[],q=st.openCursor(IDBKeyRange.bound(c+'/',c+'/\uffff'));q.onsuccess=()=>{const cur=q.result;if(!cur){done(out);return}const id=String(cur.key).slice(c.length+1),v=cur.value;out.push({id,data:()=>v});cur.continue()}});
  const ping=()=>{for(const f of subs)f()};
  window.hirkaCore={replace:async (expected,next)=>{await run('readwrite',st=>{const q=st.openCursor(),actual={};q.onsuccess=()=>{const c=q.result;if(c){if(/^(projects|meta)\//.test(String(c.key)))actual[c.key]=c.value;c.continue();return}if(sync32canon(actual)!==sync32canon(expected)){st.transaction.abort();return}for(const k of Object.keys(actual))if(!Object.hasOwn(next,k))st.delete(k);for(const [k,v] of Object.entries(next))st.put(v,k)}});ping()},dump:()=>run('readonly',(st,done)=>{const out={},q=st.openCursor();q.onsuccess=()=>{const c=q.result;if(!c){done(out);return}if(/^(projects|meta)\//.test(String(c.key)))out[c.key]=c.value;c.continue()}}),merge:async records=>{await run('readwrite',st=>{for(const [k,v] of Object.entries(records))st.put(v,k)});ping()}};
@@ -1336,21 +1407,21 @@ async function saveFile(name,data){const dl=await getDl();if(!dl){note('⚠ ذخ
 let IMP=null;
 const ymd=()=>new Date().toISOString().slice(0,10);
 function stab(k){['a','b'].forEach(x=>{$('#sp_'+x).classList.toggle('hide',x!=k);$('#st_'+x).classList.toggle('on',x==k)});if(k=='b')drawExp()}
-function drawExp(){$('#expl').innerHTML=plist.slice().sort((a,b)=>(b.updated||0)-(a.updated||0)).map(p=>`<label style="display:flex;gap:8px;align-items:center;color:var(--tx);font-size:14px;margin:6px 0"><input type="checkbox" class="expc" value="${p.id}" style="width:20px;height:20px;flex:0 0 20px">${p.pn||'بدون نام'} ${p.no?'('+toFa(p.no)+')':''}</label>`).join('')||'<div style="color:var(--mut)">هنوز پروژه‌ای نیست.</div>'}
+function drawExp(){$('#expl').innerHTML=plist.slice().sort((a,b)=>(b.updated||0)-(a.updated||0)).map(p=>`<label style="display:flex;gap:8px;align-items:center;color:var(--tx);font-size:14px;margin:6px 0"><input type="checkbox" class="expc" value="${p.id}" style="width:20px;height:20px;flex:0 0 20px">${esc(p.pn||'بدون نام')} ${p.no?'('+esc(toFa(p.no))+')':''}</label>`).join('')||'<div style="color:var(--mut)">هنوز پروژه‌ای نیست.</div>'}
 function selAll(v){document.querySelectorAll('.expc').forEach(c=>c.checked=v)}
-function expSel(){const ids=[...document.querySelectorAll('.expc:checked')].map(c=>c.value),ps=plist.filter(p=>ids.includes(p.id));if(!ps.length){note('⚠ هیچ پروژه‌ای تیک نخورده');return}saveFile('hirka-projects-'+ymd()+'.json',JSON.stringify({app:'hirka-mdf',v:3,projects:ps}))}
-function expAll(){saveFile('hirka-backup-'+ymd()+'.json',JSON.stringify({app:'hirka-mdf',v:3,projects:plist,settings:{presets:SET.presets,terms:SET.terms,co:SET.co,logo:SET.logo,color:SET.color,lh:SET.lh,rem:SET.rem,remMin:SET.remMin,rmTypes:SET.rmTypes}}))}
+async function expSel(){await flush();const ids=[...document.querySelectorAll('.expc:checked')].map(c=>c.value),ps=plist.filter(p=>ids.includes(p.id));if(!ps.length){note('⚠ هیچ پروژه‌ای تیک نخورده');return}saveFile('hirka-projects-'+ymd()+'.json',JSON.stringify({app:'hirka-mdf',v:3,projects:ps}))}
+async function expAll(){await flush();saveFile('hirka-backup-'+ymd()+'.json',JSON.stringify({app:'hirka-mdf',v:3,projects:plist,settings:{presets:SET.presets,terms:SET.terms,co:SET.co,logo:SET.logo,color:SET.color,lh:SET.lh,rem:SET.rem,remMin:SET.remMin,rmTypes:SET.rmTypes}}))}
 async function expCur(){await flush();const d=snapP();d.id=S.pid;await saveFile('hirka-project-'+(S.no||'x')+'.json',JSON.stringify({app:'hirka-mdf',v:3,projects:[d]}))}
 function pickImp(el){const f=el.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);if(!Array.isArray(o.projects))throw 0;IMP=o;showImp()}catch(e){IMP=null;$('#impi').innerHTML='<div style="color:#c33;margin-top:8px">⚠ فایل معتبر نیست</div>'}el.value=''};r.readAsText(f)}
-function showImp(){const o=IMP;$('#impi').innerHTML=`<div style="margin:8px 0;font-size:13px">${fa(o.projects.length)} پروژه در فایل است: ${o.projects.slice(0,8).map(p=>clean(p.pn||'بدون نام')).join('، ')}${o.projects.length>8?' …':''}</div><label style="display:flex;gap:8px;align-items:center;color:var(--tx);font-size:14px;margin:6px 0"><input type="radio" name="imm" value="new" checked style="width:20px;flex:0 0 20px"> اضافه شدن به‌عنوان پروژه‌ی جدید (پروژه‌های فعلی دست نمی‌خورند)</label><label style="display:flex;gap:8px;align-items:center;color:var(--tx);font-size:14px;margin:6px 0"><input type="radio" name="imm" value="rep" style="width:20px;flex:0 0 20px"> جایگزینی پروژه‌های هم‌شناسه (بازگردانی پشتیبان خودم)</label>${o.settings?`<label style="display:flex;gap:8px;align-items:center;color:var(--tx);font-size:14px;margin:6px 0"><input type="checkbox" id="imset" style="width:20px;flex:0 0 20px"> تنظیمات (لوگو، سربرگ، پیش‌فرض‌ها) هم جایگزین شود</label>`:''}<button class="btn" onclick="doImp()">شروع ایمپورت</button>`}
+function showImp(){const o=IMP;$('#impi').innerHTML=`<div style="margin:8px 0;font-size:13px">${fa(o.projects.length)} پروژه در فایل است: ${o.projects.slice(0,8).map(p=>esc(p.pn||'بدون نام')).join('، ')}${o.projects.length>8?' …':''}</div><label style="display:flex;gap:8px;align-items:center;color:var(--tx);font-size:14px;margin:6px 0"><input type="radio" name="imm" value="new" checked style="width:20px;flex:0 0 20px"> اضافه شدن به‌عنوان پروژه‌ی جدید (پروژه‌های فعلی دست نمی‌خورند)</label><label style="display:flex;gap:8px;align-items:center;color:var(--tx);font-size:14px;margin:6px 0"><input type="radio" name="imm" value="rep" style="width:20px;flex:0 0 20px"> جایگزینی پروژه‌های هم‌شناسه (بازگردانی پشتیبان خودم)</label>${o.settings?`<label style="display:flex;gap:8px;align-items:center;color:var(--tx);font-size:14px;margin:6px 0"><input type="checkbox" id="imset" style="width:20px;flex:0 0 20px"> تنظیمات (لوگو، سربرگ، پیش‌فرض‌ها) هم جایگزین شود</label>`:''}<button class="btn" onclick="doImp()">شروع ایمپورت</button>`}
 async function doImp(){if(!IMP||!pcol){note('⚠ ذخیره آماده نیست');return}
  const rp=document.querySelector('input[name=imm]:checked').value=='rep';let n=0;
  for(const p of IMP.projects){const d={};PF.concat(PFL,['pn','ps','no']).forEach(k=>{if(p[k]!==undefined)d[k]=p[k]});
   const id=rp&&p.id?String(p.id).replace(/[^\w-]/g,''):'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   d.updated=rp?(p.updated||Date.now()):Date.now();
-  try{await pcol.doc(id).set(d);n++}catch(e){}}
+  try{await pcol.doc(id).set(d);n++}catch(e){console.error('HIRKA project import failed',id,e)}}
  const st=$('#imset');if(st&&st.checked&&IMP.settings){const o=clean(IMP.settings);if(Array.isArray(o.presets))SET.presets=o.presets;if(Array.isArray(o.terms))SET.terms=o.terms;if(o.co&&typeof o.co=='object')SET.co=o.co;if(typeof o.logo=='string')SET.logo=o.logo||DEFLOGO;if(typeof o.color=='string')SET.color=o.color;if(typeof o.lh=='string')SET.lh=o.lh;if(Array.isArray(o.rem))SET.rem=o.rem;if(o.remMin!==undefined)SET.remMin=o.remMin;if(Array.isArray(o.rmTypes))SET.rmTypes=o.rmTypes;saveSet();useLogo()}
- IMP=null;$('#impi').innerHTML='';note('✓ '+n+' پروژه وارد شد');drawExp()}
+ const expected=IMP.projects.length;IMP=null;$('#impi').innerHTML='';note((n===expected?'✓ ':'⚠ ')+n+' از '+expected+' پروژه وارد شد');drawExp()}
 function hirka90FallbackDB(){
  const key='hirka_cloud32_db', listeners=new Map();
  const read=()=>{try{const data=JSON.parse(localStorage.getItem(key)||'{}');return data&&typeof data==='object'?data:{}}catch(e){return {}}};
@@ -1896,7 +1967,52 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', restoreHome);
   else restoreHome();
 })();
-</script></body>
+</script><script id="hirka-r10-money-inputs">
+/* HIRKA r10: One money-input display layer across static and dynamic tabs.
+   Native display is grouped Persian; JS .value remains canonical ASCII.
+   Non-monetary numbers, percentages, phone numbers and dates are untouched. */
+(()=>{
+ 'use strict';
+ const proto=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+ const money=/(?:تومان|ریال|مبلغ|قیمت|هزینه|دستمزد|اجرت|بودجه|پیش.?پرداخت|دریافتی|پرداخت جدید|مانده|تخفیف|ودیعه|بیعانه|پورسانت|نرخ|اثر مالی|مزد|سود|فاکتور مبلغ|مبلغ توافق)/i;
+ const nonMoney=/(?:درصد|٪|%|تعداد|شماره|کد|تاریخ|روز|ماه|سال|تلفن|موبایل|تماس|کد ملی|ارتفاع|عرض|طول|ضخامت|اندازه|فاصله|عمق|وزن|متر|سانتی|میلی|پرت|زمان|مرحله|شناسه|سررسید)/i;
+ const ids=new Set(['disc','adv','p11Extra']);
+ const canonical=v=>String(v??'').replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776)).replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)).replace(/[٬،,\s]/g,'').replace(/٫/g,'.');
+ function show(v){let raw=canonical(v);if(!raw)return '';if(!/^-?\d*(?:\.\d*)?$/.test(raw))return String(v);let sign=raw[0]==='-'?'-':'';if(sign)raw=raw.slice(1);const a=raw.split('.');let i=a[0].replace(/\B(?=(\d{3})+(?!\d))/g,'٬');return (sign+i+(a.length>1?'٫'+a[1]:'')).replace(/[0-9]/g,c=>'۰۱۲۳۴۵۶۷۸۹'[+c]);}
+ function eligible(el){if(!(el instanceof HTMLInputElement)||el.dataset.hirkaR10==='1')return false;
+  if(el.type!=='text'&&el.type!=='search')return false;
+  const label=el.labels?.length?Array.from(el.labels).map(x=>x.textContent).join(' '):el.closest('label')?.textContent||'';
+  const prev=el.previousElementSibling;const near=prev&&prev.tagName==='LABEL'?prev.textContent:'';
+  const parent=el.parentElement;const sibling=parent?.previousElementSibling;
+  const siblingLabel=sibling?.tagName==='LABEL'?sibling.textContent:'';
+  const hint=[label,near,siblingLabel,el.placeholder||'',el.getAttribute('aria-label')||''].join(' ').trim();
+  if(ids.has(el.id))return true;
+  if(nonMoney.test(hint)&&!money.test(hint))return false;
+  if(/درصد|٪|%|شماره|تاریخ|تلفن|موبایل|کد ملی|تعداد|ابعاد/.test(hint))return false;
+  return money.test(hint);
+ }
+ function attach(el){if(!eligible(el))return;
+  let raw=canonical(proto.get.call(el));
+  if(raw&&!/^-?\d*(?:\.\d*)?$/.test(raw))return;
+  Object.defineProperty(el,'value',{configurable:true,enumerable:true,get(){return raw;},set(v){raw=canonical(v);proto.set.call(el,show(raw));}});
+  el.dataset.hirkaR10='1';el.setAttribute('dir','ltr');el.style.textAlign='right';
+  proto.set.call(el,show(raw));
+  el.addEventListener('input',()=>{const text=proto.get.call(el);const position=el.selectionStart??text.length;const digitsLeft=canonical(text.slice(0,position)).length;
+    raw=canonical(text);if(!/^-?\d*(?:\.\d*)?$/.test(raw))return;
+    const formatted=show(raw);proto.set.call(el,formatted);
+    let idx=0,seen=0;for(;idx<formatted.length&&seen<digitsLeft;idx++)if(/[۰-۹0-9٫.\-]/.test(formatted[idx]))seen++;
+    try{el.setSelectionRange(idx,idx)}catch(_){}
+  });
+ }
+ function scan(root=document){if(root instanceof HTMLInputElement)attach(root);if(root.querySelectorAll)root.querySelectorAll('input').forEach(attach)}
+ function init(){scan();const obs=new MutationObserver(records=>{for(const rec of records)for(const n of rec.addedNodes)if(n.nodeType===1)scan(n)});obs.observe(document.body,{childList:true,subtree:true});
+  document.addEventListener('focusin',e=>{if(e.target instanceof HTMLInputElement)attach(e.target)},true);
+  window.HIRKAMoneyInputs={scan,canonical,show};
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+</body>
 <script>(()=>{
 const exact={design:['ورود سریع ابعاد و یونیت','ابعاد و شکل فضا','درها و پنجره‌ها','پلان و چیدمان یونیت‌ها','نمای سه‌بعدی','متریال و خروجی رندر','تنظیمات ساخت و پیش‌نمایش قطعات','ترسیم کروکی','ثبت اندازه‌ها'],finance:['هزینه‌های پروژه','نرخ‌های پیش‌فرض','برآورد قیمت فروش','حسابداری و تسویه شرکا','اقساط و دریافت‌ها','اقلام و مبالغ فاکتور'],workflow:['نوع ورق و تنظیمات برش','استفاده از موجودی ورق','قطعات و محاسبه برش','بانک کارگاه‌ها','ایجاد سفارش ساخت','پیگیری سفارش و کنترل کیفیت','حمل و دریافت کالا','کنترل کیفیت نصب و رفع ایرادات','تحویل قطعی','گارانتی و خدمات پس از فروش','مجوز شروع تولید','موجودی ورق','ثبت تکه‌ورق جدید','داشبورد و اقدامات مدیریتی','کارها و یادآوری‌ها'],records:['مشخصات قرارداد','تأیید اندازه‌گیری','تأیید نقشه اجرایی','الحاقیه و تغییرات','سوابق قرارداد','تصاویر و مستندات','انتخاب نوع سند','ویرایش و دریافت PDF','شرایط و توضیحات فاکتور'],settings:['فرمان صوتی','هویت بصری و اطلاعات شرکت','تنظیم انواع یادآوری','پشتیبان کامل','بازیابی و ورود فایل','اشتراک‌گذاری پروژه‌ها','پشتیبان رمزگذاری‌شده'],people:['پروژه‌ها','مشتریان و پیگیری فروش','مشخصات مشتری و فاکتور','ثبت یا ویرایش مشتری','فهرست و پیگیری مشتریان','خلاصه مشتریان'],risk:['توقف و رفع توقف','خسارت تأخیر و انصراف']};
 const fallback={tab0:'people',tab1:'workflow',tab2:'finance',tab3:'design',tab4:'finance',tab5:'settings',tab6:'workflow',tab7:'records',tab8:'design',tab9:'records',tab10:'workflow',tab11:'workflow',tab12:'records'};
@@ -2114,8 +2230,9 @@ const getMaster=()=>Array.isArray(SET.h48master)&&SET.h48master.length?SET.h48ma
 const getDraft=()=>{if(!S.contractDraft||!Array.isArray(S.contractDraft.clauses)){S.contractDraft={clauses:clone(getMaster()),date:'',extra:{},final:null};persist()}return S.contractDraft};
 const safe=(v)=>String(v??'').trim();
 const money=v=>Number.isFinite(Number(v))&&Number(v)>0?Math.round(Number(v)).toLocaleString('fa-IR'):'';
-function installmentText(d,total){const arr=Array.isArray(d.installments)?d.installments:[];if(!arr.length)return 'شرایط پرداخت هنوز تعیین نشده است';return arr.map((r,i)=>{const pct=Number(r.percent)||0;const amount=r.amount!==undefined&&String(r.amount).trim()!==''?Number(String(r.amount).replace(/[,٬،\s]/g,'')):Math.round(total*pct/100);return 'مرحله '+(i+1)+': '+(r.label||'پرداخت')+'، '+(pct?pct+'٪، ':'')+money(amount)+' تومان'+(r.due?'، موعد: '+r.due:'')}).join('؛ ')}
-function migrateClauses(d){if(d.h51migrated)return;d.h51migrated=true;const a=d.clauses||[];for(let i=0;i<a.length;i++){let c=a[i],original=DEFAULT[i];if(!original)continue;if(i===0)c.body=c.body.replace(/مجری: \{\{contractor_legal_name\}\} به شناسه ملی\/کد ملی \{\{contractor_id\}\}، شماره ثبت \{\{registration_no_or_na\}\}، نشانی \{\{contractor_address\}\}، کدپستی \{\{contractor_postal\}\}، تلفن \{\{contractor_phone\}\}، به نمایندگی \{\{authorized_signatory\}\} با سمت\/مستند اختیار \{\{signatory_authority\}\}/,'مجری: {{contractor_legal_name}}، به نمایندگی {{authorized_signatory}} به کد ملی {{authorized_signatory_id}}، نشانی {{contractor_address}} و تلفن {{contractor_phone}}');if(i===4)c.body=c.body.replace(/۵-۲\. مرحله اول:[^\n]+/,'۵-۲. نحوه پرداخت طبق توافق این پروژه: {{payment_schedule}}.');if(i===10)c.body=c.body.replace('راه ارتباط خدمات را هنگام تحویل اعلام می‌کند','راه ارتباط خدمات را هنگام تحویل اعلام می‌کند');if(c.title==='پیوست‌های الزامی برای هر پروژه')c.body=c.body.replace('مبلغ و سررسید اقساط توافق‌شده','مبلغ و سررسید اقساط توافق‌شده');}persist()}
+function h51Num(v){const t=String(v??'').replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776)).replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)).replace(/[,٬،\s٪%]/g,'');return t===''?0:Number(t)}
+function installmentText(d,total){const arr=Array.isArray(d.installments)?d.installments:[];if(!arr.length)return 'شرایط پرداخت هنوز تعیین نشده است';return arr.map((r,i)=>{const pct=h51Num(r.percent)||0;const amount=r.amount!==undefined&&String(r.amount).trim()!==''?h51Num(r.amount):Math.round(total*pct/100);return 'مرحله '+(i+1)+': '+(r.label||'پرداخت')+'، '+(pct?pct+'٪، ':'')+money(amount)+' تومان'+(r.due?'، موعد: '+r.due:'')}).join('؛ ')}
+function migrateClauses(d){if(d.h51migrated){const pay=(d.clauses||[]).find(c=>String(c.title||'').includes('ماده ۵'));if(pay&&/۵-۲\. مرحله اول:/.test(pay.body||'')){pay.body=pay.body.replace(/۵-۲\. مرحله اول:[^\n]+/,'۵-۲. نحوه پرداخت طبق توافق این پروژه: {{payment_schedule}}.');persist()}return}d.h51migrated=true;const a=d.clauses||[];for(let i=0;i<a.length;i++){let c=a[i],original=DEFAULT[i];if(!original)continue;if(i===0)c.body=c.body.replace(/مجری: \{\{contractor_legal_name\}\} به شناسه ملی\/کد ملی \{\{contractor_id\}\}، شماره ثبت \{\{registration_no_or_na\}\}، نشانی \{\{contractor_address\}\}، کدپستی \{\{contractor_postal\}\}، تلفن \{\{contractor_phone\}\}، به نمایندگی \{\{authorized_signatory\}\} با سمت\/مستند اختیار \{\{signatory_authority\}\}/,'مجری: {{contractor_legal_name}}، به نمایندگی {{authorized_signatory}} به کد ملی {{authorized_signatory_id}}، نشانی {{contractor_address}} و تلفن {{contractor_phone}}');if(i===4)c.body=c.body.replace(/۵-۲\. مرحله اول:[^\n]+/,'۵-۲. نحوه پرداخت طبق توافق این پروژه: {{payment_schedule}}.');if(i===10)c.body=c.body.replace('راه ارتباط خدمات را هنگام تحویل اعلام می‌کند','راه ارتباط خدمات را هنگام تحویل اعلام می‌کند');if(c.title==='پیوست‌های الزامی برای هر پروژه')c.body=c.body.replace('مبلغ و سررسید اقساط توافق‌شده','مبلغ و سررسید اقساط توافق‌شده');}persist()}
 function vars(d){const c=S.contract15||{},cust=S.cust||{},inv=typeof totals==='function'?totals():{sub:0,t:0},invoiced=Number(inv.t)||0;
  const signed=!!c.ref,changed=(c.changes||[]).reduce((n,x)=>n+(Number(x.amount)||0),0),contractTotal=(Number(c.base)||0)+changed;
  const price=invoiced>0?invoiced:(signed&&contractTotal>0?contractTotal:0);
@@ -2156,7 +2273,7 @@ function render(){const root=document.getElementById('h48contract');if(!root||!S
  const pay=node('div','h51payments',paymentGroup||form);txt('h4','درصد اقساط همین پروژه','',pay);txt('p','مبلغ کل از فاکتور خوانده می‌شود؛ درصد هر قسط را همین‌جا تعیین کنید. مبلغ هر قسط خودکار محاسبه می‌شود.','h48muted',pay);
  if(!Array.isArray(d.installments))d.installments=[];
  const paymentRows=node('div','',pay);
- const drawPayments=()=>{paymentRows.replaceChildren();const total=Number((typeof totals==='function'?totals().t:0))||Number(S.contract15?.base)||0;d.installments.forEach((r,i)=>{const line=node('div','h50grid',paymentRows);for(const [key,label,placeholder] of [['label','عنوان قسط','مثلاً هنگام امضا'],['percent','درصد این قسط','مثلاً ۴۰'],['due','موعد / شرط پرداخت','مثلاً پیش از تولید']]){const wrap=node('label','h50field',line);txt('span',label,'',wrap);const inp=node('input','',wrap);inp.value=r[key]??'';inp.placeholder=placeholder;inp.onchange=()=>{r[key]=inp.value;persist();if(key==='percent'&&!r.amount)drawPayments()};}const remove=btn('حذف این قسط',()=>{d.installments.splice(i,1);persist();drawPayments()},line);remove.style.gridColumn='1/-1'});txt('p','جمع درصدها: '+d.installments.reduce((n,r)=>n+(Number(r.percent)||0),0)+'٪ | مبلغ مبنا: '+money(total)+' تومان','h48muted',paymentRows)};
+ const drawPayments=()=>{paymentRows.replaceChildren();const total=Number((typeof totals==='function'?totals().t:0))||Number(S.contract15?.base)||0;d.installments.forEach((r,i)=>{const line=node('div','h50grid',paymentRows);for(const [key,label,placeholder] of [['label','عنوان قسط','مثلاً هنگام امضا'],['percent','درصد این قسط','مثلاً ۴۰'],['due','موعد / شرط پرداخت','مثلاً پیش از تولید']]){const wrap=node('label','h50field',line);txt('span',label,'',wrap);const inp=node('input','',wrap);inp.value=r[key]??'';inp.placeholder=placeholder;inp.onchange=()=>{r[key]=inp.value;persist();if(key==='percent'){r.amount='';drawPayments()}};}const remove=btn('حذف این قسط',()=>{d.installments.splice(i,1);persist();drawPayments()},line);remove.style.gridColumn='1/-1'});txt('p','جمع درصدها: '+d.installments.reduce((n,r)=>n+(h51Num(r.percent)||0),0)+'٪ | مبلغ مبنا: '+money(total)+' تومان','h48muted',paymentRows)};
  drawPayments();btn('＋ افزودن مرحله پرداخت',()=>{d.installments.push({label:'',percent:'',amount:'',due:''});persist();drawPayments()},pay);
  const make=node('div','h48row',form);btn('ساخت متن قرارداد از اطلاعات فرم',()=>{d.generated=true;persist();render();document.getElementById('h48contract')?.scrollIntoView({block:'start',behavior:'smooth'})},make,'primary');
  if(!d.generated){txt('p','پس از تکمیل فرم، دکمه بالا را بزنید تا متن ۱۹ ماده‌ای ساخته شود. می‌توانید بعداً به همین فرم برگردید و اطلاعات را اصلاح کنید.','h48muted',form);return}
@@ -2177,7 +2294,7 @@ function render(){const root=document.getElementById('h48contract');if(!root||!S
  const legal=node('details','h48box');txt('summary','یادداشت‌های مدیریتی و موارد ضروری برای بررسی حقوقی (جزء متن امضایی نیست)','',legal);txt('div',"پیوست مدیریتی ـ موارد ضروری پیش از تصویب قالب\n• الف. احراز هویت دقیق طرف مجری تا زمان ثبت شخصیت حقوقی هیرکا و حدود اختیار امضاکنندگان؛ تعیین تکلیف امضای دو شریک در تصویب داخلی نقشه و الحاقیه.\n• ب. بررسی وکیل درباره انصراف‌های ۵/۲۰/۷۰/۹۰ درصد، وجه التزام ۰٫۱٪ تا سقف ۵٪، خاتمه ناشی از تأخیر و تسویه مالکیت کالای نیمه‌ساخته.\n• پ. تکمیل سازوکار حل اختلاف و داوری یا انتخاب مرجع قضایی؛ تعریف روز کاری، مهلت‌های خالی و نحوه ابلاغ قابل اثبات.\n• ت. بررسی مالیات، صورتحساب، بیمه مسئولیت، حقوق مصرف‌کننده، اعتبار امضای الکترونیکی و قراردادهای منعقده از راه دور متناسب با وضعیت ثبتی و نوع مشتری.\n• ث. تعیین معیارهای فنی و تلورانس‌ها برای هر محصول، شرایط خاص رطوبت و نگهداری، حدود مالکیت فکری نقشه‌ها و نحوه تحویل فایل طراحی.\n• ج. تصویب متن نهایی توسط هر دو شریک؛ این پیش‌نویس به‌تنهایی تصویب رسمی هیرکا محسوب نمی‌شود.",'h48preview',legal);
  txt('p','این متن، پیش‌نویس قراردادی است و پیش از امضا باید از نظر حقوقی و مفاد اختصاصی پروژه بررسی شود.','h48muted',preview);
  }
- function printText(t){const frame=document.createElement('iframe');frame.style.cssText='position:fixed;left:-10000px;top:0;width:800px;height:1000px;border:0';document.body.append(frame);const doc=frame.contentDocument;doc.open();doc.write('<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>قرارداد هیرکا چوب</title><style>@page{size:A4;margin:20mm}body{font:15px/2.2 Tahoma,sans-serif;color:#222;white-space:pre-wrap;direction:rtl}</style></head><body></html>');doc.close();doc.body.textContent=t;frame.onload=()=>{};setTimeout(()=>{try{frame.contentWindow.focus();frame.contentWindow.print()}catch(e){alert('چاپ در این مرورگر امکان‌پذیر نیست')}setTimeout(()=>frame.remove(),3000)},250)}
+ function printText(t){const frame=document.createElement('iframe');frame.style.cssText='position:fixed;left:-10000px;top:0;width:800px;height:1000px;border:0';document.body.append(frame);const doc=frame.contentDocument;doc.open();doc.write('<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>قرارداد هیرکا چوب</title><style>@page{size:A4;margin:20mm}body{font:16px/2.2 "B Nazanin","B Mitra",Vazirmatn,Tahoma,sans-serif;color:#2B241F;white-space:pre-wrap;direction:rtl}</style></head><body></html>');doc.close();doc.body.textContent=t;frame.onload=()=>{};setTimeout(()=>{try{frame.contentWindow.focus();frame.contentWindow.print()}catch(e){alert('چاپ در این مرورگر امکان‌پذیر نیست')}setTimeout(()=>frame.remove(),3000)},250)}
  const oldTab=window.tab;window.tab=function(n){const result=oldTab.apply(this,arguments);if(n===9){render();requestAnimationFrame(()=>{const root=document.getElementById('contract15');if(!root)return;const panels=[...root.querySelectorAll(':scope > .h23panel')];for(const panel of panels){const summary=panel.querySelector(':scope > summary');if(summary&&summary.textContent.trim()==='مشخصات قرارداد'){summary.textContent='ثبت اطلاعات اجرایی قرارداد';panel.open=false;root.append(panel);break}}})}return result};
 })();</script><style id="h53dashboardux">
 #tab14 .h52summary{display:block;margin:2px 0 18px;padding:11px;border:1px solid #dbe4d9;border-radius:20px;background:linear-gradient(135deg,#f8faf5,#f1f5ee);box-shadow:0 5px 20px #2942310e}
@@ -2259,7 +2376,7 @@ const warranty=document.createElement('section');warranty.id='tab15';warranty.cl
 const tiles=get('tab14')?.querySelector('.h46grid');if(tiles){const t=document.createElement('button');t.type='button';t.className='h46tile';t.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3 8-8 10-5-2-8-5-8-10V6z"/><path d="m8 12 3 3 5-6"/></svg><span>گارانتی محصول</span>';t.onclick=()=>tab(15);tiles.append(t)}
 const originalTab=tab;tab=function(n){if(n===15){originalTab(11);dTab.classList.add('hide');warranty.classList.remove('hide');get('pbar')?.classList.add('hide');warrantyOpen();try{window.scrollTo(0,0)}catch(e){}return}warranty.classList.add('hide');return originalTab(n)};
 const originalDoc=typeof doc19Rows==='function'?doc19Rows:null;
-function state(){const d=dlData();if(!d.flow62)d.flow62={installation:true,shipments:{},arrival:{checks:[],issues:[],date:'',ref:''},install:{checks:[],issues:[],date:'',ref:''},close:null};return d.flow62}
+function state(){const d=dlData();if(!d.flow62)d.flow62={installation:true,shipments:{},arrival:{checks:[],issues:[],date:'',ref:''},install:{checks:[],issues:[],date:'',ref:''},close:null};const f=d.flow62;f.shipments=f.shipments||{};for(const key of ['arrival','install']){f[key]=f[key]||{checks:[],issues:[],date:'',ref:''};f[key].checks=Array.isArray(f[key].checks)?f[key].checks:[];f[key].issues=Array.isArray(f[key].issues)?f[key].issues:[]}return f}
 const dateOK=v=>/^\d{4}-\d{2}-\d{2}$/.test(v)&&!Number.isNaN(Date.parse(v));
 const checksShip=['تطبیق تعداد و مشخصات اقلام با سفارش','کنترل ظاهری، لبه‌ها و یراق‌آلات','بسته‌بندی و محافظت از گوشه‌ها','ثبت سلامت و مجوز خروج از کارگاه'];
 const checksArrival=['تطبیق تعداد بسته‌ها با بارنامه','کنترل آسیب احتمالی در حمل و تخلیه','قرارگیری صحیح اقلام در محل مشتری','ثبت کسری یا مغایرت احتمالی'];
@@ -2276,7 +2393,7 @@ const steps=mk('div','h62steps','',root);[['۱','ترخیص کارگاه',readyS
 const choice=panel(root,'نوع تحویل','این انتخاب مسیر تأیید نهایی را مشخص می‌کند.');const mode=mk('select','', '',fieldWrap(choice,'نوع سفارش'));[['yes','نیازمند نصب در محل مشتری'],['no','فقط ارسال و تحویل؛ بدون نصب']].forEach(([v,t])=>mode.add(new Option(t,v)));mode.value=f.installation?'yes':'no';mode.onchange=()=>{if(f.close){alert('برای تغییر نوع تحویل، ابتدا تحویل قطعی را بازبینی کنید');mode.value=f.installation?'yes':'no';return}f.installation=mode.value==='yes';persist();deliveryOpen()};
 const first=panel(root,'۰۱ | بارگیری و ترخیص کارگاه','هر سفارش ساخت به‌طور مستقل از کارگاه مربوطه ترخیص می‌شود.');if(!orders.length)mk('p','h62muted','هنوز سفارشی در تب تولید ثبت نشده است. ابتدا سفارش‌های کارگاه را در بخش تولید ایجاد کنید.',first);
 orders.forEach((o,i)=>{const id=String(o.id),item=f.shipments[id]||(f.shipments[id]={checks:[],issues:[]});const w=(prodBank()||[]).find(x=>String(x.id)===String(o.shop));const card=mk('div','h62order','',first);mk('strong','',`${i+1}. ${safe(o.title||o.name||o.work||'سفارش ساخت')} | ${w?.name||'کارگاه داخلی / نامشخص'}`,card);if(item.done){mk('div','h62status',`ترخیص ثبت شد | ${item.date} | ${item.destination==='customer'?'ارسال به مشتری':'انتقال به انبار / کارگاه'}`,card);return}if(Number(o.stage)<7)mk('p','h62muted','توجه: این سفارش هنوز به مرحله تأیید خروج در تب تولید نرسیده است.',card);checklist(card,checksShip,item.checks);issues(card,item.issues);issueAdd(card,item.issues);const g=mk('div','h62grid','',card),date=field(g,'تاریخ بارگیری (میلادی)','date'),ref=field(g,'راننده / شماره بارنامه / مسئول تحویل'),destWrap=fieldWrap(card,'مقصد خروج'),dest=mk('select','','',destWrap);dest.add(new Option('ارسال مستقیم به مشتری','customer'));dest.add(new Option('انتقال به انبار یا کارگاه دیگر','transfer'));action(card,'ثبت ترخیص این سفارش',()=>{if(!item.checks.every(Boolean)||item.checks.length<checksShip.length)throw Error('چک‌لیست ترخیص کامل نیست');if(!cleared(item.issues))throw Error('ایراد باز وجود دارد');if(!dateOK(date.value)||!ref.value.trim())throw Error('تاریخ و مرجع حمل لازم است');if(Number(o.stage)<7)throw Error('ابتدا مجوز خروج سفارش را در تب تولید ثبت کنید');Object.assign(item,{done:true,date:date.value,ref:ref.value.trim(),destination:dest.value})})});
-const second=panel(root,'۰۲ | تخلیه و کنترل در محل مشتری','تحویل فیزیکی کالا با پذیرش نهایی کیفیت متفاوت است.');if(!readyShip)mk('p','h62muted','پس از ترخیص تمام سفارش‌ها، ثبت کنترل محل مشتری فعال می‌شود.',second);if(f.arrival.done){mk('div','h62status',`تحویل در محل ثبت شد | ${f.arrival.date}`,second)}else{checklist(second,checksArrival,f.arrival.checks);issues(second,f.arrival.issues);issueAdd(second,f.arrival.issues);const g=mk('div','h62grid','',second),date=field(g,'تاریخ تخلیه (میلادی)','date'),ref=field(g,'نام تحویل‌گیرنده / شماره رسید');const b=action(second,'تأیید تخلیه و کنترل محل',()=>{if(!readyShip)throw Error('ابتدا همه سفارش‌ها را ترخیص کنید');if(!f.arrival.checks.every(Boolean)||f.arrival.checks.length<checksArrival.length||!cleared(f.arrival.issues))throw Error('چک‌لیست یا ایرادات محل کامل نیست');if(!dateOK(date.value)||!ref.value.trim())throw Error('تاریخ و مرجع رسید لازم است');Object.assign(f.arrival,{done:true,date:date.value,ref:ref.value.trim()});d.receipt={date:date.value,ref:ref.value.trim()}});b.disabled=!readyShip}
+const second=panel(root,'۰۲ | تخلیه و کنترل در محل مشتری','تحویل فیزیکی کالا با پذیرش نهایی کیفیت متفاوت است.');if(!readyShip)mk('p','h62muted','پس از ترخیص تمام سفارش‌ها، ثبت کنترل محل مشتری فعال می‌شود.',second);if(f.arrival.done){mk('div','h62status',`تحویل در محل ثبت شد | ${f.arrival.date}`,second)}else{checklist(second,checksArrival,f.arrival.checks);issues(second,f.arrival.issues);issueAdd(second,f.arrival.issues);const g=mk('div','h62grid','',second),date=field(g,'تاریخ تخلیه (میلادی)','date'),ref=field(g,'نام تحویل‌گیرنده / شماره رسید');const b=action(second,'تأیید تخلیه و کنترل محل',()=>{if(!readyShip)throw Error('ابتدا همه سفارش‌ها را ترخیص کنید');if(!f.arrival.checks.every(Boolean)||f.arrival.checks.length<checksArrival.length||!cleared(f.arrival.issues))throw Error('چک‌لیست یا ایرادات محل کامل نیست');if(!dateOK(date.value)||!ref.value.trim())throw Error('تاریخ و مرجع رسید لازم است');Object.assign(f.arrival,{done:true,date:date.value,ref:ref.value.trim()});d.receipt={date:date.value,ref:ref.value.trim()}})}
 const third=panel(root,f.installation?'۰۳ | نصب و کنترل نهایی':'۰۳ | تحویل قطعی بدون نصب',f.installation?'کنترل فنی، تست عملکرد و رفع ایرادات پیش از تحویل قطعی':'با تأیید دریافت و سلامت کالا، پروژه آماده ثبت تحویل نهایی است.');if(f.installation){if(f.install.done){mk('div','h62status','کنترل نصب تأیید شد | '+f.install.date,third)}else{checklist(third,checksInstall,f.install.checks);issues(third,f.install.issues);issueAdd(third,f.install.issues);const g=mk('div','h62grid','',third),date=field(g,'تاریخ اتمام نصب (میلادی)','date'),ref=field(g,'مسئول نصب / مرجع تأیید');const b=action(third,'تأیید اتمام نصب',()=>{if(!readyArr)throw Error('ابتدا کنترل محل مشتری ثبت شود');if(!f.install.checks.every(Boolean)||f.install.checks.length<checksInstall.length||!cleared(f.install.issues))throw Error('چک‌لیست نصب یا ایرادات کامل نیست');if(!dateOK(date.value)||!ref.value.trim())throw Error('تاریخ و مرجع تأیید لازم است');Object.assign(f.install,{done:true,date:date.value,ref:ref.value.trim()})});b.disabled=!readyArr}}else mk('div','h62summary',readyArr?'کنترل محل تأیید شده؛ نصب برای این سفارش لازم نیست.':'برای تحویل بدون نصب، ابتدا کنترل محل مشتری را تکمیل کنید.',third);
 const last=panel(root,'صورت‌جلسه تحویل قطعی','این مرحله پس از کنترل‌های لازم ثبت می‌شود؛ گواهی گارانتی در تب جداگانه صادر خواهد شد.');if(d.final){mk('div','h62status',`تحویل قطعی: ${d.final.date} | ${d.final.ref}`,last);action(last,'مشاهده گارانتی محصول',()=>tab(15),true)}else{const g=mk('div','h62grid','',last),date=field(g,'تاریخ تحویل قطعی (میلادی)','date'),ref=field(g,'نام تأییدکننده / شماره صورت‌جلسه');const b=action(last,'ثبت تحویل قطعی پروژه',()=>{if(!readyInstall)throw Error('همه کنترل‌های الزامی باید تکمیل شوند');if(!dateOK(date.value)||!ref.value.trim())throw Error('تاریخ و مرجع صورت‌جلسه لازم است');if(date.value<f.arrival.date)throw Error('تاریخ تحویل پیش از دریافت کالا است');if(f.installation&&date.value<f.install.date)throw Error('تاریخ تحویل پیش از پایان نصب است');d.final={date:date.value,ref:ref.value.trim(),warranty:dlMonth(date.value,12),adjustment:dlMonth(date.value,24)};f.close={date:date.value,ref:ref.value.trim()}});b.disabled=!readyInstall}
 }

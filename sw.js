@@ -1,4 +1,25 @@
-const C='hirka34-v1',F=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
-self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(F)).then(()=>self.skipWaiting())));
-self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||new URL(e.request.url).origin!==location.origin||!e.request.url.startsWith(self.registration.scope))return;if(e.request.mode==='navigate')e.respondWith(fetch(e.request).then(r=>{if(r.ok){const copy=r.clone();caches.open(C).then(c=>c.put('./index.html',copy));}return r}).catch(()=>caches.open(C).then(c=>c.match('./index.html'))));else e.respondWith(caches.open(C).then(c=>c.match(e.request)).then(r=>r||fetch(e.request)));});
+// HIRKA 1.13 - network-first navigation; old cached HTML must not override deployments.
+const CACHE = 'hirka-app-v1.13';
+self.addEventListener('install', event => {
+  self.skipWaiting();
+});
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
+    await self.clients.claim();
+  })());
+});
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  if (req.mode === 'navigate') {
+    event.respondWith(fetch(req, {cache:'no-store'}).catch(async () => {
+      const cached = await caches.match(req);
+      return cached || Response.error();
+    }));
+    return;
+  }
+  if (new URL(req.url).origin !== self.location.origin) return;
+  event.respondWith(fetch(req).catch(() => caches.match(req)));
+});

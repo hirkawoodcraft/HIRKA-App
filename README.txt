@@ -1,1 +1,8 @@
-Upload index.html, manifest.json, sw.js and icons to a separate GitHub Pages repository. Enable Drive API, create a Web OAuth client with authorized JavaScript origin https://hirkawoodcraft.github.io (or your actual origin), add the Google account as test user if needed. Enter the same OAuth ID and encryption password on both devices. Use project list for sync. Photos excluded. Conflicts stop sync; do not delete cloud files. No background sync when closed. Separate local database; export/import old projects first.
+HIRKA 1.13 — Custom wood logo icon
+
+Upload ALL files in this ZIP to the ROOT of your GitHub repository, replacing matching files. Do not upload the ZIP itself.
+
+https://github.com/hirkawoodcraft/HIRKA-App
+https://hirkawoodcraft.github.io/HIRKA-App/?v=1.13
+
+Back up project data before updating. Do not clear browser site data.

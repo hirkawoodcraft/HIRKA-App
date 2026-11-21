@@ -1,1 +1,23 @@
-{"name": "HIRKA Workspace", "short_name": "HIRKA", "start_url": "./", "scope": "./", "display": "standalone", "background_color": "#F1EFEB", "theme_color": "#252A27", "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}]}
+{
+  "name": "هیرکا | مدیریت پروژه و طراحی کابینت",
+  "short_name": "هیرکا",
+  "start_url": "./?v=1.13",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4efe7",
+  "theme_color": "#2B241F",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

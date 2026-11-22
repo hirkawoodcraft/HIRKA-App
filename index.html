@@ -1419,7 +1419,7 @@ function drawList(){const q=($('#srch').value||'').trim(),pj=p=>p.spaces||[],pit
  $('#imp').innerHTML=(!plist.length&&hasLocal())?'<button class="btn s" onclick="newProject(true)">انتقال اطلاعات قبلی این گوشی به یک پروژه</button>':'';drawRmSum()}
 async function localDB(){
  const K='hirka_cloud32_db',subs=new Set();
- const db=await new Promise((resolve,reject)=>{const q=indexedDB.open('hirka_cloud32_core',1);q.onupgradeneeded=()=>q.result.createObjectStore('records');q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);q.onblocked=()=>reject(Error('blocked'))});
+ const db=await new Promise((resolve,reject)=>{const q=indexedDB.open('hirka_cloud32_core',1);q.onupgradeneeded=()=>q.result.createObjectStore('records');q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);q.onblocked=()=>reject(new Error('IndexedDB blocked: another tab or version may have the database open'))});
  const run=(mode,work)=>new Promise((resolve,reject)=>{const tx=db.transaction('records',mode),st=tx.objectStore('records');let result;tx.oncomplete=()=>resolve(result);tx.onerror=tx.onabort=()=>reject(tx.error||Error('transaction failed'));work(st,v=>result=v)});
  await run('readwrite',(st)=>{const q=st.get('__migrated');q.onsuccess=()=>{if(q.result)return;const raw=localStorage.getItem(K);let old={};
  try{old=raw?JSON.parse(raw):{}}catch(e){console.error('HIRKA legacy data migration parse failed',e);st.transaction.abort();return}
@@ -1478,7 +1478,21 @@ async function initCloud(){
  pcol.onSnapshot(sn=>{plist=sn.docs.map(d=>Object.assign({id:d.id},clean(d.data())));drawList()},()=>{});
  tab(0)}
 $('#plist').innerHTML='<div class="card" style="color:var(--mut)">در حال بارگذاری…</div>';tab(0);
-const projectDBReady=initCloud().catch(e=>{console.error(e);$('#plist').textContent='⚠ ذخیره‌سازی محلی در دسترس نیست. مرورگر را بررسی کنید؛ اطلاعات قبلی حذف نشده‌اند.';note('⚠ خطای پایگاه داده')});
+const projectDBReady=initCloud().catch(e=>{
+ console.error('HIRKA startup database error',e);
+ const box=$('#plist');
+ if(box){
+  box.textContent='';
+  const panel=document.createElement('div');panel.className='card';panel.style.cssText='line-height:2;direction:rtl;text-align:right;padding:18px';
+  const title=document.createElement('strong');title.textContent='⚠ راه‌اندازی اطلاعات پروژه‌ها انجام نشد';panel.appendChild(title);
+  const desc=document.createElement('p');desc.textContent='اطلاعات قبلی حذف نشده‌اند. لطفاً حافظه مرورگر را پاک نکنید. برای بررسی علت، متن خطای زیر را ارسال کنید.';panel.appendChild(desc);
+  const detail=document.createElement('pre');detail.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;direction:ltr;text-align:left;font:12px monospace;padding:10px;border:1px solid #b08d57;border-radius:8px';
+  detail.textContent=String(e&&e.name||'Error')+': '+String(e&&e.message||e);panel.appendChild(detail);
+  const btn=document.createElement('button');btn.className='btn';btn.textContent='تلاش دوباره';btn.onclick=()=>location.reload();panel.appendChild(btn);
+  box.appendChild(panel);
+ }
+ note('⚠ خطای پایگاه داده؛ جزئیات در صفحه پروژه‌ها');
+});
 
 </script>
 <script>

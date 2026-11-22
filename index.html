@@ -554,10 +554,24 @@ function drawLogo(x,r,y,mw,mh){const m=LOGOIMG;if(!m||!m.naturalWidth)return;con
 function h9MoneyRaw(v){return String(v==null?'':v).replace(/[۰-۹]/g,d=>String(d.charCodeAt(0)-1776)).replace(/[٠-٩]/g,d=>String(d.charCodeAt(0)-1632)).replace(/[٬,،\s]/g,'').replace(/[^0-9.\-]/g,'')}
 function h9MoneyShow(v){const raw=h9MoneyRaw(v);if(!raw)return '';const sign=raw.startsWith('-')?'-':'';const clean=raw.replace(/^-/,''),parts=clean.split('.');const integer=(parts[0]||'0').replace(/^0+(?=\d)/,'');const grouped=integer.replace(/\B(?=(\d{3})+(?!\d))/g,'٬');return (sign+grouped+(parts.length>1?'٫'+parts.slice(1).join(''):'')).replace(/[0-9]/g,d=>'۰۱۲۳۴۵۶۷۸۹'[+d])}
 function h9MoneyInput(el,store){const raw=h9MoneyRaw(el.value);store(raw);el.value=h9MoneyShow(raw);try{el.setSelectionRange(el.value.length,el.value.length)}catch(_){} }
+/* r32: cost-only input; do not install the global money accessor on these fields. */
+function h32CostMoneyInput(el,store){
+ const before=el.value;
+ const caret=el.selectionStart==null?before.length:el.selectionStart;
+ const countDigits=t=>(String(t).match(/[0-9۰-۹٠-٩]/g)||[]).length;
+ const leftDigits=countDigits(before.slice(0,caret));
+ const raw=h9MoneyRaw(before);
+ store(raw);
+ const shown=h9MoneyShow(raw);
+ el.value=shown;
+ let next=0,seen=0;
+ if(leftDigits){for(;next<shown.length;next++){if(/[0-9۰-۹]/.test(shown[next]))seen++;if(seen>=leftDigits){next++;break}}}
+ try{el.setSelectionRange(next,next)}catch(_){}
+}
 function drawCosts(){p152Migrate();S.costs=S.costs||[];
  $('#cchips').innerHTML=`<label class="h453picklabel" for="h453pick">افزودن سریع از هزینه‌های پیش‌فرض</label><select id="h453pick" aria-label="انتخاب هزینه پیش‌فرض برای افزودن" onchange="if(this.value!==''){addC(Number(this.value));this.value=''}"><option value="">انتخاب هزینه و افزودن به لیست…</option>${SET.presets.map((p,i)=>p.d?`<option value="${i}">${esc(p.d)}${p.p?' — '+fmt(p.p)+' تومان':''}</option>`:'').join('')}</select>`;
- $('#crows').innerHTML=S.costs.map((c,i)=>`<div class="card in"><div class="row"><input placeholder="شرح هزینه" value="${esc(c.d||'')}" oninput="S.costs[${i}].d=this.value;cs()"><button class="x" onclick="S.costs.splice(${i},1);drawCosts();save()">✕</button></div><div class="row"><div><label>تعداد</label><input inputmode="decimal" value="${c.q}" oninput="S.costs[${i}].q=this.value;cs()"></div><div><label>قیمت واحد (تومان)</label><input type="text" data-hirka-cost-money="1" inputmode="numeric" value="${h9MoneyShow(c.p||'')}" oninput="h9MoneyInput(this,v=>S.costs[${i}].p=v);cs()"></div><button class="btn s" style="flex:.7;margin:0" onclick="starC(${i})">ذخیره پیش‌فرض</button></div></div>`).join('');
- $('#pre').innerHTML=SET.presets.map((p,i)=>`<div class="row"><input value="${esc(p.d)}" placeholder="نام" oninput="SET.presets[${i}].d=this.value;saveSet()" onchange="drawCosts()"><input style="flex:.6" type="text" data-hirka-cost-money="1" inputmode="numeric" value="${h9MoneyShow(p.p||'')}" placeholder="قیمت (تومان)" oninput="h9MoneyInput(this,v=>SET.presets[${i}].p=v);saveSet()"><button class="x" onclick="SET.presets.splice(${i},1);saveSet();drawCosts()">✕</button></div>`).join('');ctot()}
+ $('#crows').innerHTML=S.costs.map((c,i)=>`<div class="card in"><div class="row"><input placeholder="شرح هزینه" value="${esc(c.d||'')}" oninput="S.costs[${i}].d=this.value;cs()"><button class="x" onclick="S.costs.splice(${i},1);drawCosts();save()">✕</button></div><div class="row"><div><label>تعداد</label><input inputmode="decimal" value="${c.q}" oninput="S.costs[${i}].q=this.value;cs()"></div><div><label>قیمت واحد (تومان)</label><input type="text" inputmode="decimal" data-hirka-cost-money="1" dir="ltr" value="${h9MoneyShow(c.p||'')}" oninput="h32CostMoneyInput(this,v=>S.costs[${i}].p=v);cs()"></div><button class="btn s" style="flex:.7;margin:0" onclick="starC(${i})">ذخیره پیش‌فرض</button></div></div>`).join('');
+ $('#pre').innerHTML=SET.presets.map((p,i)=>`<div class="row"><input value="${esc(p.d)}" placeholder="نام" oninput="SET.presets[${i}].d=this.value;saveSet()" onchange="drawCosts()"><input style="flex:.6" type="text" inputmode="decimal" data-hirka-cost-money="1" dir="ltr" value="${h9MoneyShow(p.p||'')}" placeholder="قیمت (تومان)" oninput="h32CostMoneyInput(this,v=>SET.presets[${i}].p=v);saveSet()"><button class="x" onclick="SET.presets.splice(${i},1);saveSet();drawCosts()">✕</button></div>`).join('');ctot()}
 function addC(i){const p=SET.presets[i]||{d:'',p:''};S.costs.push({d:p.d,q:1,p:p.p||''});drawCosts();save()}
 function starC(i){const c=S.costs[i];if(!c.d)return;const e=SET.presets.find(p=>p.d==c.d);if(e)e.p=c.p;else SET.presets.push({d:c.d,p:c.p});saveSet();drawCosts()}
 function cs(){save();ctot()}
@@ -1419,7 +1433,7 @@ function drawList(){const q=($('#srch').value||'').trim(),pj=p=>p.spaces||[],pit
  $('#imp').innerHTML=(!plist.length&&hasLocal())?'<button class="btn s" onclick="newProject(true)">انتقال اطلاعات قبلی این گوشی به یک پروژه</button>':'';drawRmSum()}
 async function localDB(){
  const K='hirka_cloud32_db',subs=new Set();
- const db=await new Promise((resolve,reject)=>{const q=indexedDB.open('hirka_cloud32_core',1);q.onupgradeneeded=()=>q.result.createObjectStore('records');q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);q.onblocked=()=>reject(new Error('IndexedDB blocked: another tab or version may have the database open'))});
+ const db=await new Promise((resolve,reject)=>{const q=indexedDB.open('hirka_cloud32_core',1);q.onupgradeneeded=()=>q.result.createObjectStore('records');q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);q.onblocked=()=>reject(Error('blocked'))});
  const run=(mode,work)=>new Promise((resolve,reject)=>{const tx=db.transaction('records',mode),st=tx.objectStore('records');let result;tx.oncomplete=()=>resolve(result);tx.onerror=tx.onabort=()=>reject(tx.error||Error('transaction failed'));work(st,v=>result=v)});
  await run('readwrite',(st)=>{const q=st.get('__migrated');q.onsuccess=()=>{if(q.result)return;const raw=localStorage.getItem(K);let old={};
  try{old=raw?JSON.parse(raw):{}}catch(e){console.error('HIRKA legacy data migration parse failed',e);st.transaction.abort();return}
@@ -1478,21 +1492,7 @@ async function initCloud(){
  pcol.onSnapshot(sn=>{plist=sn.docs.map(d=>Object.assign({id:d.id},clean(d.data())));drawList()},()=>{});
  tab(0)}
 $('#plist').innerHTML='<div class="card" style="color:var(--mut)">در حال بارگذاری…</div>';tab(0);
-const projectDBReady=initCloud().catch(e=>{
- console.error('HIRKA startup database error',e);
- const box=$('#plist');
- if(box){
-  box.textContent='';
-  const panel=document.createElement('div');panel.className='card';panel.style.cssText='line-height:2;direction:rtl;text-align:right;padding:18px';
-  const title=document.createElement('strong');title.textContent='⚠ راه‌اندازی اطلاعات پروژه‌ها انجام نشد';panel.appendChild(title);
-  const desc=document.createElement('p');desc.textContent='اطلاعات قبلی حذف نشده‌اند. لطفاً حافظه مرورگر را پاک نکنید. برای بررسی علت، متن خطای زیر را ارسال کنید.';panel.appendChild(desc);
-  const detail=document.createElement('pre');detail.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;direction:ltr;text-align:left;font:12px monospace;padding:10px;border:1px solid #b08d57;border-radius:8px';
-  detail.textContent=String(e&&e.name||'Error')+': '+String(e&&e.message||e);panel.appendChild(detail);
-  const btn=document.createElement('button');btn.className='btn';btn.textContent='تلاش دوباره';btn.onclick=()=>location.reload();panel.appendChild(btn);
-  box.appendChild(panel);
- }
- note('⚠ خطای پایگاه داده؛ جزئیات در صفحه پروژه‌ها');
-});
+const projectDBReady=initCloud().catch(e=>{console.error(e);$('#plist').textContent='⚠ ذخیره‌سازی محلی در دسترس نیست. مرورگر را بررسی کنید؛ اطلاعات قبلی حذف نشده‌اند.';note('⚠ خطای پایگاه داده')});
 
 </script>
 <script>
@@ -1973,11 +1973,11 @@ const oldTab=tab;tab=function(n){const r=oldTab(n);if(n===10)render();return r};
   const hint=[label,el.placeholder||'',el.getAttribute('aria-label')||''].join(' ');
   return moneyWords.test(hint)&&!(/شماره|تاریخ|تلفن|کد ملی/.test(hint));
  }
- document.addEventListener('focusout',e=>{const el=e.target;if(!(el instanceof HTMLInputElement)||el.dataset.hirkaCostMoney==='1'||!isMoney(el))return;
+ document.addEventListener('focusout',e=>{const el=e.target;if(!(el instanceof HTMLInputElement)||!isMoney(el))return;
   const v=digits(el.value).replace(/[,،٬\s]/g,'').trim();if(!/^-?\d+(?:[.٫]\d+)?$/.test(v))return;
   const [integer,fraction]=v.replace('٫','.').split('.');el.value=group(integer)+(fraction!==undefined?'.'+fa(fraction):'');
  },true);
- document.addEventListener('focusin',e=>{const el=e.target;if(!(el instanceof HTMLInputElement)||el.dataset.hirkaCostMoney==='1'||!isMoney(el))return;
+ document.addEventListener('focusin',e=>{const el=e.target;if(!(el instanceof HTMLInputElement)||!isMoney(el))return;
   el.value=digits(el.value).replace(/[,،٬\s]/g,'');
  },true);
  new MutationObserver(queue).observe(document.documentElement,{subtree:true,childList:true,characterData:true});

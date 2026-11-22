@@ -1,25 +1,24 @@
-// HIRKA 1.13 - network-first navigation; old cached HTML must not override deployments.
-const CACHE = 'hirka-app-v1.13';
+/* HIRKA r33 - safe app-shell cache. No IndexedDB/localStorage modifications. */
+const CACHE_NAME = 'hirka-app-shell-r33-complete-1';
+const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', event => {
-  self.skipWaiting();
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
-  event.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k.startsWith('hirka-app-') && k !== CACHE).map(k => caches.delete(k)));
-    await self.clients.claim();
-  })());
+  event.waitUntil(Promise.all([
+    caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('hirka-app-shell-') && key !== CACHE_NAME).map(key => caches.delete(key)))),
+    self.clients.claim()
+  ]));
 });
 self.addEventListener('fetch', event => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-  if (req.mode === 'navigate') {
-    event.respondWith(fetch(req, {cache:'no-store'}).catch(async () => {
-      const cached = await caches.match(req);
-      return cached || Response.error();
-    }));
+  const request = event.request;
+  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
+  if (request.mode === 'navigate') {
+    event.respondWith(fetch(request).then(response => {
+      if (response.ok) { const copy = response.clone(); caches.open(CACHE_NAME).then(cache => cache.put('./index.html', copy)).catch(() => {}); }
+      return response;
+    }).catch(async () => (await caches.match('./index.html')) || Response.error()));
     return;
   }
-  if (new URL(req.url).origin !== self.location.origin) return;
-  event.respondWith(fetch(req).catch(() => caches.match(req)));
+  event.respondWith(fetch(request).catch(async () => (await caches.match(request)) || Response.error()));
 });
